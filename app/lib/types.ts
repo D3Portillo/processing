@@ -1,0 +1,128 @@
+// Domain Model — Mortgage Operations Portal
+// These types represent the business entities the UI works with.
+// The repository layer maps between DB rows and these domain types.
+
+export type Stage =
+  | "Intake"
+  | "Document Collection"
+  | "Lender Review"
+  | "Negotiation"
+  | "Approval"
+  | "Closing"
+  | "Completed"
+  | "Rejected";
+
+export const STAGES: Stage[] = [
+  "Intake",
+  "Document Collection",
+  "Lender Review",
+  "Negotiation",
+  "Approval",
+  "Closing",
+  "Completed",
+  "Rejected",
+];
+
+export type TaskPriority = "High" | "Medium" | "Low";
+export type TaskStatus = "Open" | "Completed";
+
+export type TimelineEventType =
+  | "task_completed"
+  | "task_created"
+  | "note_added"
+  | "stage_changed"
+  | "file_assigned"
+  | "document_uploaded"
+  | "file_created";
+
+export interface Specialist {
+  id: string;
+  name: string;
+  email: string;
+  avatarColor: string;
+}
+
+export interface Lender {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+}
+
+export interface Borrower {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  propertyAddress: string;
+  loanNumber: string;
+}
+
+export interface MortgageFile {
+  id: string;
+  borrower: Borrower;
+  specialist: Specialist;
+  lender: Lender;
+  stage: Stage;
+  saleDate: string | null; // ISO date string
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Task {
+  id: string;
+  fileId: string;
+  title: string;
+  description: string | null;
+  assignedTo: Specialist;
+  dueDate: string | null; // ISO date string
+  priority: TaskPriority;
+  status: TaskStatus;
+  createdAt: string;
+  completedAt: string | null;
+}
+
+export interface Note {
+  id: string;
+  fileId: string;
+  author: Specialist;
+  body: string;
+  createdAt: string;
+}
+
+export interface TimelineEvent {
+  id: string;
+  fileId: string;
+  type: TimelineEventType;
+  actor: Specialist;
+  description: string;
+  metadata: Record<string, string> | null;
+  createdAt: string;
+}
+
+export interface DocumentRecord {
+  id: string;
+  fileId: string;
+  name: string;
+  type: string;
+  uploadedBy: Specialist;
+  fileSize: number; // bytes
+  createdAt: string;
+}
+
+// Composite — used by the File detail page
+export interface MortgageFileDetail extends MortgageFile {
+  tasks: Task[];
+  notes: Note[];
+  timeline: TimelineEvent[];
+  documents: DocumentRecord[];
+}
+
+// Dashboard view models
+export interface DashboardData {
+  overdueTasks: Task[];
+  dueTodayTasks: Task[];
+  dueTomorrowTasks: Task[];
+  upcomingSaleDates: MortgageFile[];
+  recentlyUpdatedFiles: MortgageFile[];
+}
