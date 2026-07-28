@@ -1,0 +1,12 @@
+// Carbon Design System — full import (simplest, most reliable)
+@use '@carbon/react';
+
+// Tailwind (layout utilities only)
+@import "tailwindcss";
+
+body {
+  background: var(--cds--background);
+  color: var(--cds--text-primary);
+  font-family: var(--cds--font-family-sans, -apple-system, system-ui, sans-serif);
+  line-height: 1.5;
+}

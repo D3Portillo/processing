@@ -9,12 +9,12 @@ export default async function AllFilesPage() {
   const files = await repo.getAllFiles();
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen">
       <Nav active="files" />
-      <main className="mx-auto max-w-4xl px-6 py-8">
+      <main className="mx-auto max-w-4xl px-6 py-8" style={{ marginTop: "3rem" }}>
         <div className="mb-6">
           <h2 className="text-2xl font-bold">All Files</h2>
-          <p className="text-sm text-muted-foreground mt-1">{files.length} mortgage files</p>
+          <p className="text-sm text-[var(--cds--text-secondary)] mt-1">{files.length} mortgage files</p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {files.map((file) => (

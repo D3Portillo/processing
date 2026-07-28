@@ -2,11 +2,11 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Badge } from "@/app/components/ui/badge";
+import { Tag, Dropdown } from "@carbon/react";
 import type { Task, MortgageFile, TaskFilter } from "@/app/lib/types";
 import { formatRelative, isOverdue, isToday, isTomorrow } from "@/app/lib/utils";
 
-const FILTER_OPTIONS: { value: TaskFilter; label: string }[] = [
+const FILTER_OPTIONS = [
   { value: "today", label: "Due Today" },
   { value: "overdue", label: "Overdue" },
   { value: "tomorrow", label: "Due Tomorrow" },
@@ -38,7 +38,7 @@ export function TaskList({ tasks, fileMap }: { tasks: Task[]; fileMap: Map<strin
 
   const filtered = useMemo(() => filterTasks(tasks, filter), [tasks, filter]);
   const counts = useMemo(() => {
-    const c: Record<TaskFilter, number> = { all: 0, overdue: 0, today: 0, tomorrow: 0, upcoming: 0, "no-due-date": 0 };
+    const c: Record<string, number> = {};
     c.all = tasks.length;
     c.overdue = tasks.filter((t) => t.dueDate && isOverdue(t.dueDate) && !isToday(t.dueDate)).length;
     c.today = tasks.filter((t) => t.dueDate && isToday(t.dueDate)).length;
@@ -50,53 +50,52 @@ export function TaskList({ tasks, fileMap }: { tasks: Task[]; fileMap: Map<strin
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-4">
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value as TaskFilter)}
-          className="flex h-9 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium"
-        >
-          {FILTER_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label} ({counts[opt.value]})
-            </option>
-          ))}
-        </select>
+      <div className="mb-4">
+        <Dropdown
+          id="task-filter"
+          label="Filter tasks"
+          items={FILTER_OPTIONS.map((opt) => ({
+            id: opt.value,
+            label: `${opt.label} (${counts[opt.value] || 0})`,
+          }))}
+          selectedItem={{
+            id: filter,
+            label: `${FILTER_OPTIONS.find((o) => o.value === filter)?.label} (${counts[filter] || 0})`,
+          }}
+          onChange={(e: { selectedItem: { id: string } }) => setFilter(e.selectedItem.id as TaskFilter)}
+        />
       </div>
 
       {filtered.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-8 text-center">No tasks in this view</p>
+        <p className="text-sm text-[var(--cds--text-secondary)] py-8 text-center">No tasks in this view</p>
       ) : (
         <div className="space-y-1">
           {filtered.map((task) => {
             const file = fileMap.get(task.fileId);
             const overdue = task.dueDate && isOverdue(task.dueDate) && !isToday(task.dueDate);
-            const priorityColor =
-              task.priority === "High" ? "text-destructive" :
-              task.priority === "Medium" ? "text-warning" :
-              "text-muted-foreground";
+            const priorityType = task.priority === "High" ? "red" : task.priority === "Medium" ? "yellow" : "gray";
 
             return (
-              <Link key={task.id} href={`/files/${task.fileId}`}>
-                <div className="flex items-start gap-3 p-3 rounded-md hover:bg-muted/50 transition-colors cursor-pointer">
+              <Link key={task.id} href={`/files/${task.fileId}`} className="block">
+                <div className="flex items-start gap-3 p-3 rounded-md hover:bg-[var(--cds--layer-hover)] transition-colors cursor-pointer">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">{task.title}</p>
                     {file && (
-                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                      <p className="text-xs text-[var(--cds--text-secondary)] mt-0.5 truncate">
                         {file.borrower.name} — {file.lender.name}
                       </p>
                     )}
                     <div className="flex items-center gap-3 mt-1.5">
-                      <span className={`text-xs font-medium ${priorityColor}`}>{task.priority}</span>
+                      <Tag type={priorityType as "red" | "yellow" | "gray"} size="sm">{task.priority}</Tag>
                       {task.dueDate && (
-                        <span className={`text-xs ${overdue ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
+                        <span className={`text-xs ${overdue ? "text-[var(--cds--text-error)] font-semibold" : "text-[var(--cds--text-secondary)]"}`}>
                           {overdue ? "Overdue · " : ""}{formatRelative(task.dueDate)}
                         </span>
                       )}
-                      <span className="text-xs text-muted-foreground">{task.assignedTo.name}</span>
+                      <span className="text-xs text-[var(--cds--text-secondary)]">{task.assignedTo.name}</span>
                     </div>
                   </div>
-                  {file && <Badge variant="secondary">{file.stage}</Badge>}
+                  {file && <Tag size="sm">{file.stage}</Tag>}
                 </div>
               </Link>
             );

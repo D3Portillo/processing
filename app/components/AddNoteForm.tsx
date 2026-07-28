@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Button } from "@/app/components/ui/button";
-import { Textarea } from "@/app/components/ui/textarea";
-import { Label } from "@/app/components/ui/label";
-import { Plus } from "lucide-react";
+import { Button, TextArea, Form, Stack } from "@carbon/react";
+import { Add } from "@carbon/icons-react";
 import { addNoteAction } from "@/app/lib/actions";
 
 export function AddNoteForm({ fileId, authorId }: { fileId: string; authorId: string }) {
@@ -24,33 +22,33 @@ export function AddNoteForm({ fileId, authorId }: { fileId: string; authorId: st
 
   if (!expanded) {
     return (
-      <Button variant="outline" size="sm" onClick={() => setExpanded(true)}>
-        <Plus className="size-4" /> Add Note
+      <Button kind="ghost" size="sm" renderIcon={Add} onClick={() => setExpanded(true)}>
+        Add Note
       </Button>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <div className="space-y-2">
-        <Label htmlFor="note-body">New Note</Label>
-        <Textarea
+    <Form onSubmit={handleSubmit}>
+      <Stack gap={3}>
+        <TextArea
           id="note-body"
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
+          labelText="New Note"
           placeholder="Enter your note..."
           rows={3}
+          value={body}
+          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setBody(e.target.value)}
           autoFocus
         />
-      </div>
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={() => { setExpanded(false); setBody(""); }}>
-          Cancel
-        </Button>
-        <Button type="submit" size="sm" disabled={transitioning || !body.trim()}>
-          {transitioning ? "Saving..." : "Save Note"}
-        </Button>
-      </div>
-    </form>
+        <div className="flex justify-end gap-2">
+          <Button kind="secondary" size="sm" onClick={() => { setExpanded(false); setBody(""); }}>
+            Cancel
+          </Button>
+          <Button type="submit" size="sm" disabled={transitioning || !body.trim()}>
+            {transitioning ? "Saving..." : "Save Note"}
+          </Button>
+        </div>
+      </Stack>
+    </Form>
   );
 }

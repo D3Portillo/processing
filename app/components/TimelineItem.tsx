@@ -1,47 +1,44 @@
-import { Avatar } from "@/app/components/ui/avatar";
+import {
+  Checkmark,
+  Warning,
+  ArrowRight,
+  User as UserIcon,
+  Document as DocumentIcon,
+  Add as AddIcon,
+  Notebook,
+} from "@carbon/icons-react";
 import { formatDateTime, getInitials } from "@/app/lib/utils";
 import type { TimelineEvent } from "@/app/lib/types";
-import { CheckCircle2, FileText, MessageSquare, ArrowRightCircle, UserPlus, FileUp, FolderOpen } from "lucide-react";
 
 const EVENT_ICONS = {
-  task_completed: CheckCircle2,
-  task_created: CheckCircle2,
-  note_added: MessageSquare,
-  stage_changed: ArrowRightCircle,
-  file_assigned: UserPlus,
-  document_uploaded: FileUp,
-  file_created: FolderOpen,
-} as const;
-
-const EVENT_COLORS = {
-  task_completed: "text-success",
-  task_created: "text-muted-foreground",
-  note_added: "text-muted-foreground",
-  stage_changed: "text-brand",
-  file_assigned: "text-muted-foreground",
-  document_uploaded: "text-muted-foreground",
-  file_created: "text-muted-foreground",
+  task_completed: Checkmark,
+  task_created: AddIcon,
+  note_added: Notebook,
+  stage_changed: ArrowRight,
+  file_assigned: UserIcon,
+  document_uploaded: DocumentIcon,
+  file_created: Notebook,
 } as const;
 
 export function TimelineItem({ event }: { event: TimelineEvent }) {
-  const Icon = EVENT_ICONS[event.type] ?? FileText;
-  const color = EVENT_COLORS[event.type] ?? "text-muted-foreground";
-
+  const Icon = EVENT_ICONS[event.type] ?? Warning;
   return (
     <div className="flex gap-3">
       <div className="flex flex-col items-center">
-        <div className={`p-1.5 rounded-full bg-muted ${color}`}>
-          <Icon className="size-3.5" />
+        <div className="p-1.5 rounded-full bg-[var(--cds--layer-02)]">
+          <Icon size={14} />
         </div>
-        <div className="w-px flex-1 bg-border" />
+        <div className="w-px flex-1 bg-[var(--cds--border-subtle)]" />
       </div>
       <div className="pb-6 flex-1">
         <p className="text-sm font-medium">{event.description}</p>
         <div className="flex items-center gap-2 mt-1">
-          <Avatar className="size-5 text-[10px]">{getInitials(event.actor.name)}</Avatar>
-          <span className="text-xs text-muted-foreground">{event.actor.name}</span>
-          <span className="text-xs text-muted-foreground">·</span>
-          <span className="text-xs text-muted-foreground">{formatDateTime(event.createdAt)}</span>
+          <span className="cds--avatar size-5 text-[10px] flex items-center justify-center rounded-full bg-[var(--cds--layer-02)]">
+            {getInitials(event.actor.name)}
+          </span>
+          <span className="text-xs text-[var(--cds--text-secondary)]">{event.actor.name}</span>
+          <span className="text-xs text-[var(--cds--text-secondary)]">·</span>
+          <span className="text-xs text-[var(--cds--text-secondary)]">{formatDateTime(event.createdAt)}</span>
         </div>
       </div>
     </div>

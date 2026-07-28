@@ -1,12 +1,16 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Button } from "@/app/components/ui/button";
-import { Input } from "@/app/components/ui/input";
-import { Label } from "@/app/components/ui/label";
-import { Textarea } from "@/app/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/app/components/ui/dialog";
-import { Plus } from "lucide-react";
+import {
+  Modal,
+  TextInput,
+  TextArea,
+  Dropdown,
+  Button,
+  Form,
+  Stack,
+} from "@carbon/react";
+import { Add } from "@carbon/icons-react";
 import type { Specialist, TaskPriority } from "@/app/lib/types";
 import { createTaskAction } from "@/app/lib/actions";
 
@@ -40,56 +44,74 @@ export function AddTaskDialog({ fileId, specialists, actorId }: { fileId: string
     });
   }
 
+  const priorityItems = [
+    { id: "High", label: "High" },
+    { id: "Medium", label: "Medium" },
+    { id: "Low", label: "Low" },
+  ];
+  const specialistItems = specialists.map((s) => ({ id: s.id, label: s.name }));
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Plus className="size-4" /> Add Task
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>New Task</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="task-title">Title</Label>
-            <Input id="task-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Call lender for status update" required />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="task-assign">Assign To</Label>
-              <select id="task-assign" value={assignTo} onChange={(e) => setAssignTo(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                {specialists.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="task-due">Due Date</Label>
-              <Input id="task-due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="task-priority">Priority</Label>
-            <select id="task-priority" value={priority} onChange={(e) => setPriority(e.target.value as TaskPriority)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-              <option value="High">High</option>
-              <option value="Medium">Medium</option>
-              <option value="Low">Low</option>
-            </select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="task-desc">Description (optional)</Label>
-            <Textarea id="task-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit" disabled={transitioning || !title.trim()}>
-              {transitioning ? "Creating..." : "Create Task"}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <>
+      <Button
+        kind="ghost"
+        size="sm"
+        renderIcon={Add}
+        onClick={() => setOpen(true)}
+      >
+        Add Task
+      </Button>
+      <Modal
+        open={open}
+        onRequestClose={() => setOpen(false)}
+        modalHeading="New Task"
+        primaryButtonText="Create Task"
+        secondaryButtonText="Cancel"
+        onSecondarySubmit={() => setOpen(false)}
+        onRequestSubmit={handleSubmit}
+        primaryButtonDisabled={transitioning || !title.trim()}
+      >
+        <Form>
+          <Stack gap={5}>
+            <TextInput
+              id="task-title"
+              labelText="Title"
+              placeholder="e.g. Call lender for status update"
+              value={title}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
+              required
+            />
+            <Dropdown
+              id="task-assign"
+              labelText="Assign To"
+              items={specialistItems}
+              selectedItem={specialistItems.find((s) => s.id === assignTo) ?? specialistItems[0]}
+              onChange={(e: { selectedItem: { id: string } }) => setAssignTo(e.selectedItem.id)}
+            />
+            <TextInput
+              id="task-due"
+              labelText="Due Date"
+              type="date"
+              value={dueDate}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDueDate(e.target.value)}
+            />
+            <Dropdown
+              id="task-priority"
+              labelText="Priority"
+              items={priorityItems}
+              selectedItem={priorityItems.find((p) => p.id === priority) ?? priorityItems[1]}
+              onChange={(e: { selectedItem: { id: string } }) => setPriority(e.selectedItem.id as TaskPriority)}
+            />
+            <TextArea
+              id="task-desc"
+              labelText="Description (optional)"
+              rows={2}
+              value={description}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
+            />
+          </Stack>
+        </Form>
+      </Modal>
+    </>
   );
 }
