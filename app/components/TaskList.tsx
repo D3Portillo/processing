@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Box, Typography, Chip, FormControl, Select, MenuItem, InputLabel } from "@mui/material";
+import { Box, Typography, Chip, FormControl, Select, MenuItem } from "@mui/material";
 import type { Task, MortgageFile, TaskFilter } from "@/app/lib/types";
 import { formatRelative, isOverdue, isToday, isTomorrow } from "@/app/lib/utils";
 
@@ -11,7 +11,6 @@ const FILTER_OPTIONS: { value: TaskFilter; label: string }[] = [
   { value: "overdue", label: "Overdue" },
   { value: "tomorrow", label: "Due Tomorrow" },
   { value: "upcoming", label: "Upcoming" },
-  { value: "no-due-date", label: "No Due Date" },
   { value: "all", label: "All Tasks" },
 ];
 
@@ -21,8 +20,9 @@ function filterTasks(tasks: Task[], filter: TaskFilter): Task[] {
     case "today": return tasks.filter((t) => t.dueDate && isToday(t.dueDate));
     case "tomorrow": return tasks.filter((t) => t.dueDate && isTomorrow(t.dueDate));
     case "upcoming": return tasks.filter((t) => t.dueDate && !isOverdue(t.dueDate) && !isToday(t.dueDate) && !isTomorrow(t.dueDate));
-    case "no-due-date": return tasks.filter((t) => !t.dueDate);
-    default: return tasks;
+    case "all":
+    default:
+      return tasks;
   }
 }
 
@@ -36,17 +36,14 @@ export function TaskList({ tasks, fileMap }: { tasks: Task[]; fileMap: Map<strin
     c.today = tasks.filter((t) => t.dueDate && isToday(t.dueDate)).length;
     c.tomorrow = tasks.filter((t) => t.dueDate && isTomorrow(t.dueDate)).length;
     c.upcoming = tasks.filter((t) => t.dueDate && !isOverdue(t.dueDate) && !isToday(t.dueDate) && !isTomorrow(t.dueDate)).length;
-    c["no-due-date"] = tasks.filter((t) => !t.dueDate).length;
     return c;
   }, [tasks]);
 
   return (
     <Box>
       <FormControl size="small" sx={{ minWidth: 200, mb: 2 }}>
-        <InputLabel>Filter</InputLabel>
         <Select
           value={filter}
-          label="Filter"
           onChange={(e) => setFilter(e.target.value as TaskFilter)}
         >
           {FILTER_OPTIONS.map((opt) => (

@@ -1,4 +1,4 @@
-import { Container, Typography, Box, Card, CardContent } from "@mui/material";
+import { Container, Typography, Box } from "@mui/material";
 import { getRepository } from "@/app/lib/repo-instance";
 import { Nav } from "@/app/components/Nav";
 import { TaskList } from "@/app/components/TaskList";
@@ -20,16 +20,9 @@ export default async function DashboardPage() {
     <Box>
       <Nav active="tasks" />
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h5" fontWeight={700}>My Work</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>What needs your attention</Typography>
-        </Box>
+        <TaskList tasks={data.allOpenTasks} fileMap={fileMap} />
 
-        <Card variant="outlined" sx={{ mb: 4 }}>
-          <CardContent><TaskList tasks={data.allOpenTasks} fileMap={fileMap} /></CardContent>
-        </Card>
-
-        <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>Recently Updated Files</Typography>
+        <Typography variant="h6" fontWeight={600} sx={{ mt: 6, mb: 2 }}>Recently Updated Files</Typography>
         <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
           {data.recentlyUpdatedFiles.map((file) => <FileCard key={file.id} file={file} />)}
         </Box>

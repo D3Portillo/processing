@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AppBar, Toolbar, Typography, Button, Container } from "@mui/material";
+import { AppBar, Toolbar, Typography, Container, Box } from "@mui/material";
 
 export function Nav({ active }: { active: "tasks" | "sales" | "files" }) {
   const links = [
@@ -26,28 +26,29 @@ export function Nav({ active }: { active: "tasks" | "sales" | "files" }) {
           <Typography variant="h6" component="div" sx={{ fontWeight: 700, flexGrow: 0, color: "text.primary" }}>
             Pathway Mortgage
           </Typography>
-          <div className="flex items-center gap-1 ml-auto">
+          <Box sx={{ display: "flex", gap: 2, ml: "auto" }}>
             {links.map((link) => (
-              <Button
+              <Link
                 key={link.key}
-                component={Link}
                 href={link.href}
-                variant={active === link.key ? "contained" : "text"}
-                size="small"
-                sx={
-                  active === link.key
-                    ? {
-                        bgcolor: "primary.main",
-                        color: "common.white",
-                        "&:hover": { bgcolor: "primary.dark" },
-                      }
-                    : { color: "text.secondary" }
-                }
+                style={{ textDecoration: "none" }}
               >
-                {link.label}
-              </Button>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    pb: 0.5,
+                    borderBottom: active === link.key ? 2 : 0,
+                    borderColor: "primary.main",
+                    color: active === link.key ? "primary.main" : "text.secondary",
+                    fontWeight: active === link.key ? 600 : 400,
+                    "&:hover": { color: "primary.main" },
+                  }}
+                >
+                  {link.label}
+                </Typography>
+              </Link>
             ))}
-          </div>
+          </Box>
         </Toolbar>
       </Container>
     </AppBar>
