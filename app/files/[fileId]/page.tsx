@@ -12,6 +12,7 @@ import { AddTaskDialog } from "@/app/components/AddTaskDialog";
 import { AddNoteForm } from "@/app/components/AddNoteForm";
 import { CompleteTaskButton } from "@/app/components/CompleteTaskButton";
 import { ArrowLeft, Phone, Mail, MapPin, Calendar, FileText, Building2, Clock } from "lucide-react";
+import { Nav } from "@/app/components/Nav";
 import { formatDate, formatDateTime, formatRelative, getInitials, isOverdue } from "@/app/lib/utils";
 import { seedDatabaseAction } from "@/app/lib/actions";
 import type { DocumentRecord } from "@/app/lib/types";
@@ -51,7 +52,7 @@ export default async function FileDetailPage({ params }: { params: Promise<{ fil
       <header className="border-b bg-background sticky top-0 z-40">
         <div className="mx-auto max-w-4xl px-6 py-4">
           <Link href="/" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mb-2">
-            <ArrowLeft className="size-4" /> Back to My Work
+            <ArrowLeft className="size-4" /> Back
           </Link>
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">

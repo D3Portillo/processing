@@ -1,8 +1,6 @@
-import Link from "next/link";
 import { getRepository } from "@/app/lib/repo-instance";
-import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
+import { Nav } from "@/app/components/Nav";
 import { FileCard } from "@/app/components/FileCard";
-import { ArrowLeft } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -12,19 +10,12 @@ export default async function AllFilesPage() {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <header className="border-b bg-background sticky top-0 z-40">
-        <div className="mx-auto max-w-5xl px-6 py-4 flex items-center gap-4">
-          <Link href="/" className="text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="size-5" />
-          </Link>
-          <div>
-            <h1 className="text-xl font-bold">All Files</h1>
-            <p className="text-sm text-muted-foreground">{files.length} mortgage files</p>
-          </div>
+      <Nav active="files" />
+      <main className="mx-auto max-w-4xl px-6 py-8">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold">All Files</h2>
+          <p className="text-sm text-muted-foreground mt-1">{files.length} mortgage files</p>
         </div>
-      </header>
-
-      <main className="mx-auto max-w-5xl px-6 py-8">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {files.map((file) => (
             <FileCard key={file.id} file={file} />

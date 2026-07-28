@@ -119,10 +119,10 @@ export interface MortgageFileDetail extends MortgageFile {
 }
 
 // Dashboard view models
+export type TaskFilter = "all" | "overdue" | "today" | "tomorrow" | "upcoming" | "no-due-date";
+
 export interface DashboardData {
-  overdueTasks: Task[];
-  dueTodayTasks: Task[];
-  dueTomorrowTasks: Task[];
+  allOpenTasks: Task[];
   upcomingSaleDates: MortgageFile[];
   recentlyUpdatedFiles: MortgageFile[];
 }

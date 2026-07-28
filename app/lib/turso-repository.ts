@@ -152,7 +152,7 @@ export class TursoRepository implements MortgageFileRepository {
     const nowISO = toISO(now);
 
     // Open tasks with due dates
-    const allOpenTasks = await this.db
+    const allOpenTasksRows = await this.db
       .select({
         task: schema.tasks,
         specialist: schema.specialists,
@@ -167,21 +167,11 @@ export class TursoRepository implements MortgageFileRepository {
       .innerJoin(schema.lenders, eq(schema.mortgageFiles.lenderId, schema.lenders.id))
       .where(and(eq(schema.tasks.status, "Open"), isNull(schema.tasks.completedAt)));
 
-    const overdueTasks: Task[] = [];
-    const dueTodayTasks: Task[] = [];
-    const dueTomorrowTasks: Task[] = [];
+    const allOpenTasks: Task[] = [];
 
-    for (const row of allOpenTasks) {
-      if (!row.task.dueDate) continue;
+    for (const row of allOpenTasksRows) {
       const t = this.mapTask(row.task, row.specialist);
-      // Attach file info to task via a hack — we'll just check dates
-      if (row.task.dueDate < todayStart) {
-        overdueTasks.push({ ...t, fileId: row.task.fileId });
-      } else if (row.task.dueDate >= todayStart && row.task.dueDate <= todayEnd) {
-        dueTodayTasks.push({ ...t, fileId: row.task.fileId });
-      } else if (row.task.dueDate >= tomorrowStart && row.task.dueDate <= tomorrowEnd) {
-        dueTomorrowTasks.push({ ...t, fileId: row.task.fileId });
-      }
+      allOpenTasks.push({ ...t, fileId: row.task.fileId });
     }
 
     // Upcoming sale dates (next 30 days, not Completed/Rejected)
@@ -227,7 +217,7 @@ export class TursoRepository implements MortgageFileRepository {
 
     const recentlyUpdatedFiles = recentFiles.map((r) => this.mapFile(r.file, r.borrower, r.specialist, r.lender));
 
-    return { overdueTasks, dueTodayTasks, dueTomorrowTasks, upcomingSaleDates, recentlyUpdatedFiles };
+    return { allOpenTasks, upcomingSaleDates, recentlyUpdatedFiles };
   }
 
   // ── Files ────────────────────────────────────────────────
