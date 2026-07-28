@@ -70,8 +70,9 @@ export function TaskList({ tasks, fileMap }: { tasks: Task[]; fileMap: Map<strin
                 <Box sx={{
                   display: "flex", alignItems: "flex-start", gap: 1.5, p: 1.5, borderRadius: 1,
                   cursor: "pointer",
-                  bgcolor: index % 2 === 0 ? "transparent" : "action.hover",
-                  "&:hover": { bgcolor: "action.selected" },
+                  bgcolor: index % 2 === 1 ? "rgba(0,0,0,0.025)" : "transparent",
+                  borderTop: index === 0 ? 1 : 0,
+                  borderColor: "divider",
                 }}>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Typography variant="body2" fontWeight={500}>{task.title}</Typography>

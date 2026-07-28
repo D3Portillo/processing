@@ -23,9 +23,11 @@ export function Nav({ active }: { active: "tasks" | "sales" | "files" }) {
     >
       <Container maxWidth="lg">
         <Toolbar disableGutters sx={{ gap: 2 }}>
-          <Typography variant="h6" component="div" sx={{ fontWeight: 700, flexGrow: 0, color: "text.primary" }}>
-            Pathway Mortgage
-          </Typography>
+          <Link href="/" style={{ textDecoration: "none" }}>
+            <Typography variant="h6" component="div" sx={{ fontWeight: 700, flexGrow: 0, color: "text.primary", cursor: "pointer", "&:hover": { color: "primary.main" } }}>
+              Processing
+            </Typography>
+          </Link>
           <Box sx={{ display: "flex", gap: 2, ml: "auto" }}>
             {links.map((link) => (
               <Link

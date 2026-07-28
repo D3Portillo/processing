@@ -3,7 +3,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "Pathway Mortgage Operations Portal",
+  title: "Pathway Mortgage Relief",
   description: "Operations workspace for mortgage relief specialists",
 };
 
