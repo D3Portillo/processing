@@ -9,9 +9,13 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@carbon/icons-react": "^11.84.0",
-    "@carbon/react": "^1.112.0",
+    "@emotion/cache": "^11.14.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@libsql/client": "^0.17.4",
+    "@mui/icons-material": "^9.2.0",
+    "@mui/material": "^9.2.0",
+    "@mui/material-nextjs": "^9.1.1",
     "classnames": "^2.5.1",
     "date-fns": "^4.4.0",
     "drizzle-orm": "^0.45.2",
@@ -30,7 +34,6 @@
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.2.11",
-    "sass": "^1.102.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

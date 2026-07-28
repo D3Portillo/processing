@@ -1,10 +1,7 @@
+import { Container, Typography, Box, Card, CardContent } from "@mui/material";
 import { getRepository } from "@/app/lib/repo-instance";
 import { Nav } from "@/app/components/Nav";
-import { StageBadge } from "@/app/components/StageBadge";
-import { Calendar } from "@carbon/icons-react";
-import Link from "next/link";
-import { formatDate, formatRelative, isOverdue } from "@/app/lib/utils";
-import type { MortgageFile } from "@/app/lib/types";
+import { SaleDateCard } from "@/app/components/FileCard";
 
 export const dynamic = "force-dynamic";
 
@@ -13,50 +10,21 @@ export default async function SalesPage() {
   const data = await repo.getDashboardData();
 
   return (
-    <div className="min-h-screen">
+    <Box>
       <Nav active="sales" />
-      <main className="mx-auto max-w-4xl px-6 py-8 space-y-6" style={{ marginTop: "3rem" }}>
-        <div>
-          <h2 className="text-2xl font-bold">Upcoming Sale Dates</h2>
-          <p className="text-sm text-[var(--cds--text-secondary)] mt-1">Next 30 days</p>
-        </div>
-
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h5" fontWeight={700}>Upcoming Sale Dates</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>Next 30 days</Typography>
+        </Box>
         {data.upcomingSaleDates.length === 0 ? (
-          <div className="cds--tile py-12 text-center">
-            <p className="text-sm text-[var(--cds--text-secondary)]">No upcoming sale dates</p>
-          </div>
+          <Card variant="outlined"><CardContent><Typography color="text.secondary" sx={{ textAlign: "center", py: 4 }}>No upcoming sale dates</Typography></CardContent></Card>
         ) : (
-          <div className="space-y-3">
-            {data.upcomingSaleDates.map((file: MortgageFile) => (
-              <Link key={file.id} href={`/files/${file.id}`} className="block">
-                <div className="cds--tile p-4">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold truncate">{file.borrower.name}</p>
-                      <p className="text-sm text-[var(--cds--text-secondary)] truncate">{file.lender.name}</p>
-                      <p className="text-xs text-[var(--cds--text-secondary)] mt-1 truncate">{file.borrower.propertyAddress}</p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <Calendar size={14} className={isOverdue(file.saleDate!) ? "text-[var(--cds--text-error)]" : "text-[var(--cds--text-secondary)]"} />
-                        <p className={`text-sm font-bold ${isOverdue(file.saleDate!) ? "text-[var(--cds--text-error)]" : ""}`}>
-                          {file.saleDate ? formatDate(file.saleDate) : "—"}
-                        </p>
-                      </div>
-                      <p className="text-xs text-[var(--cds--text-secondary)] mt-0.5">
-                        {file.saleDate ? formatRelative(file.saleDate) : ""}
-                      </p>
-                      <div className="mt-1.5">
-                        <StageBadge stage={file.stage} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+            {data.upcomingSaleDates.map((file) => <SaleDateCard key={file.id} file={file} />)}
+          </Box>
         )}
-      </main>
-    </div>
+      </Container>
+    </Box>
   );
 }

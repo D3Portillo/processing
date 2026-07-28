@@ -1,12 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Header,
-  HeaderName,
-  HeaderNavigation,
-  HeaderMenuItem,
-} from "@carbon/react";
+import { AppBar, Toolbar, Typography, Button, Container } from "@mui/material";
 
 export function Nav({ active }: { active: "tasks" | "sales" | "files" }) {
   const links = [
@@ -16,19 +11,28 @@ export function Nav({ active }: { active: "tasks" | "sales" | "files" }) {
   ];
 
   return (
-    <Header aria-label="Pathway Mortgage Operations Portal">
-      <HeaderName href="/">Pathway Mortgage</HeaderName>
-      <HeaderNavigation aria-label="Main navigation">
-        {links.map((link) => (
-          <HeaderMenuItem
-            key={link.key}
-            href={link.href}
-            isCurrentPage={active === link.key}
-          >
-            {link.label}
-          </HeaderMenuItem>
-        ))}
-      </HeaderNavigation>
-    </Header>
+    <AppBar position="sticky" elevation={0} sx={{ borderBottom: 1, borderColor: "divider" }}>
+      <Container maxWidth="lg">
+        <Toolbar disableGutters sx={{ gap: 2 }}>
+          <Typography variant="h6" component="div" sx={{ fontWeight: 700, flexGrow: 0 }}>
+            Pathway Mortgage
+          </Typography>
+          <div className="flex items-center gap-1 ml-auto">
+            {links.map((link) => (
+              <Button
+                key={link.key}
+                component={Link}
+                href={link.href}
+                color={active === link.key ? "primary" : "inherit"}
+                variant={active === link.key ? "contained" : "text"}
+                size="small"
+              >
+                {link.label}
+              </Button>
+            ))}
+          </div>
+        </Toolbar>
+      </Container>
+    </AppBar>
   );
 }

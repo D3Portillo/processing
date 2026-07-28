@@ -1,46 +1,37 @@
-import {
-  Checkmark,
-  Warning,
-  ArrowRight,
-  User as UserIcon,
-  Document as DocumentIcon,
-  Add as AddIcon,
-  Notebook,
-} from "@carbon/icons-react";
+import { Box, Typography, Avatar } from "@mui/material";
+import { CheckCircle2, FileText, MessageSquare, ArrowRightCircle, UserPlus, FileUp, FolderOpen } from "lucide-react";
 import { formatDateTime, getInitials } from "@/app/lib/utils";
 import type { TimelineEvent } from "@/app/lib/types";
 
 const EVENT_ICONS = {
-  task_completed: Checkmark,
-  task_created: AddIcon,
-  note_added: Notebook,
-  stage_changed: ArrowRight,
-  file_assigned: UserIcon,
-  document_uploaded: DocumentIcon,
-  file_created: Notebook,
+  task_completed: CheckCircle2,
+  task_created: CheckCircle2,
+  note_added: MessageSquare,
+  stage_changed: ArrowRightCircle,
+  file_assigned: UserPlus,
+  document_uploaded: FileUp,
+  file_created: FolderOpen,
 } as const;
 
 export function TimelineItem({ event }: { event: TimelineEvent }) {
-  const Icon = EVENT_ICONS[event.type] ?? Warning;
+  const Icon = EVENT_ICONS[event.type] ?? FileText;
   return (
-    <div className="flex gap-3">
-      <div className="flex flex-col items-center">
-        <div className="p-1.5 rounded-full bg-[var(--cds--layer-02)]">
+    <Box sx={{ display: "flex", gap: 1.5 }}>
+      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <Box sx={{ p: 1, borderRadius: "50%", bgcolor: "action.hover" }}>
           <Icon size={14} />
-        </div>
-        <div className="w-px flex-1 bg-[var(--cds--border-subtle)]" />
-      </div>
-      <div className="pb-6 flex-1">
-        <p className="text-sm font-medium">{event.description}</p>
-        <div className="flex items-center gap-2 mt-1">
-          <span className="cds--avatar size-5 text-[10px] flex items-center justify-center rounded-full bg-[var(--cds--layer-02)]">
-            {getInitials(event.actor.name)}
-          </span>
-          <span className="text-xs text-[var(--cds--text-secondary)]">{event.actor.name}</span>
-          <span className="text-xs text-[var(--cds--text-secondary)]">·</span>
-          <span className="text-xs text-[var(--cds--text-secondary)]">{formatDateTime(event.createdAt)}</span>
-        </div>
-      </div>
-    </div>
+        </Box>
+        <Box sx={{ width: "1px", flex: 1, bgcolor: "divider", minHeight: 24 }} />
+      </Box>
+      <Box sx={{ pb: 3, flex: 1 }}>
+        <Typography variant="body2" fontWeight={500}>{event.description}</Typography>
+        <Box sx={{ display: "flex", gap: 1, mt: 0.5, alignItems: "center" }}>
+          <Avatar sx={{ width: 20, height: 20, fontSize: "0.6rem" }}>{getInitials(event.actor.name)}</Avatar>
+          <Typography variant="caption" color="text.secondary">{event.actor.name}</Typography>
+          <Typography variant="caption" color="text.secondary">·</Typography>
+          <Typography variant="caption" color="text.secondary">{formatDateTime(event.createdAt)}</Typography>
+        </Box>
+      </Box>
+    </Box>
   );
 }

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import "./tailwind.css";
-import "./globals.scss";
+import "./globals.css";
+import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: "Pathway Mortgage Operations Portal",
@@ -9,9 +9,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

@@ -2,15 +2,10 @@
 
 import { useState, useTransition } from "react";
 import {
-  Modal,
-  TextInput,
-  TextArea,
-  Dropdown,
-  Button,
-  Form,
-  Stack,
-} from "@carbon/react";
-import { Add } from "@carbon/icons-react";
+  Button, Dialog, DialogTitle, DialogContent, DialogActions,
+  TextField, MenuItem, FormControl, InputLabel, Select, Stack,
+} from "@mui/material";
+import { Plus } from "lucide-react";
 import type { Specialist, TaskPriority } from "@/app/lib/types";
 import { createTaskAction } from "@/app/lib/actions";
 
@@ -23,95 +18,56 @@ export function AddTaskDialog({ fileId, specialists, actorId }: { fileId: string
   const [priority, setPriority] = useState<TaskPriority>("Medium");
   const [description, setDescription] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  function handleSubmit() {
     if (!title.trim()) return;
     startTransition(async () => {
       await createTaskAction({
-        fileId,
-        title: title.trim(),
-        description: description.trim() || undefined,
-        assignedToId: assignTo,
-        dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
-        priority,
-        actorId,
+        fileId, title: title.trim(), description: description.trim() || undefined,
+        assignedToId: assignTo, dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
+        priority, actorId,
       });
-      setTitle("");
-      setDescription("");
-      setDueDate("");
-      setPriority("Medium");
+      setTitle(""); setDescription(""); setDueDate(""); setPriority("Medium");
       setOpen(false);
     });
   }
 
-  const priorityItems = [
-    { id: "High", label: "High" },
-    { id: "Medium", label: "Medium" },
-    { id: "Low", label: "Low" },
-  ];
-  const specialistItems = specialists.map((s) => ({ id: s.id, label: s.name }));
-
   return (
     <>
-      <Button
-        kind="ghost"
-        size="sm"
-        renderIcon={Add}
-        onClick={() => setOpen(true)}
-      >
+      <Button variant="outlined" size="small" startIcon={<Plus size={16} />} onClick={() => setOpen(true)}>
         Add Task
       </Button>
-      <Modal
-        open={open}
-        onRequestClose={() => setOpen(false)}
-        modalHeading="New Task"
-        primaryButtonText="Create Task"
-        secondaryButtonText="Cancel"
-        onSecondarySubmit={() => setOpen(false)}
-        onRequestSubmit={handleSubmit}
-        primaryButtonDisabled={transitioning || !title.trim()}
-      >
-        <Form>
-          <Stack gap={5}>
-            <TextInput
-              id="task-title"
-              labelText="Title"
-              placeholder="e.g. Call lender for status update"
-              value={title}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
-              required
-            />
-            <Dropdown
-              id="task-assign"
-              labelText="Assign To"
-              items={specialistItems}
-              selectedItem={specialistItems.find((s) => s.id === assignTo) ?? specialistItems[0]}
-              onChange={(e: { selectedItem: { id: string } }) => setAssignTo(e.selectedItem.id)}
-            />
-            <TextInput
-              id="task-due"
-              labelText="Due Date"
-              type="date"
-              value={dueDate}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDueDate(e.target.value)}
-            />
-            <Dropdown
-              id="task-priority"
-              labelText="Priority"
-              items={priorityItems}
-              selectedItem={priorityItems.find((p) => p.id === priority) ?? priorityItems[1]}
-              onChange={(e: { selectedItem: { id: string } }) => setPriority(e.selectedItem.id as TaskPriority)}
-            />
-            <TextArea
-              id="task-desc"
-              labelText="Description (optional)"
-              rows={2}
-              value={description}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
-            />
+      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>New Task</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2.5} sx={{ mt: 1 }}>
+            <TextField label="Title" fullWidth required value={title} onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Call lender for status update" />
+            <FormControl fullWidth>
+              <InputLabel>Assign To</InputLabel>
+              <Select value={assignTo} label="Assign To" onChange={(e) => setAssignTo(e.target.value)}>
+                {specialists.map((s) => <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>)}
+              </Select>
+            </FormControl>
+            <TextField label="Due Date" type="date" fullWidth value={dueDate} onChange={(e) => setDueDate(e.target.value)}
+              InputLabelProps={{ shrink: true }} />
+            <FormControl fullWidth>
+              <InputLabel>Priority</InputLabel>
+              <Select value={priority} label="Priority" onChange={(e) => setPriority(e.target.value as TaskPriority)}>
+                <MenuItem value="High">High</MenuItem>
+                <MenuItem value="Medium">Medium</MenuItem>
+                <MenuItem value="Low">Low</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField label="Description (optional)" fullWidth multiline rows={2} value={description} onChange={(e) => setDescription(e.target.value)} />
           </Stack>
-        </Form>
-      </Modal>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpen(false)}>Cancel</Button>
+          <Button variant="contained" onClick={handleSubmit} disabled={transitioning || !title.trim()}>
+            {transitioning ? "Creating..." : "Create Task"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }

@@ -1,3 +1,4 @@
+import { Container, Typography, Box, Card, CardContent } from "@mui/material";
 import { getRepository } from "@/app/lib/repo-instance";
 import { Nav } from "@/app/components/Nav";
 import { TaskList } from "@/app/components/TaskList";
@@ -8,40 +9,31 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const repo = getRepository();
-
   let data;
-  try {
-    data = await repo.getDashboardData();
-  } catch {
-    await seedDatabaseAction();
-    data = await repo.getDashboardData();
-  }
+  try { data = await repo.getDashboardData(); }
+  catch { await seedDatabaseAction(); data = await repo.getDashboardData(); }
 
   const allFiles = await repo.getAllFiles();
   const fileMap = new Map(allFiles.map((f) => [f.id, f]));
 
   return (
-    <div className="min-h-screen">
+    <Box>
       <Nav active="tasks" />
-      <main className="cds--content mx-auto max-w-4xl px-6 py-8 space-y-8" style={{ marginTop: "3rem" }}>
-        <div>
-          <h2 className="text-2xl font-bold">My Work</h2>
-          <p className="text-sm text-[var(--cds--text-secondary)] mt-1">What needs your attention</p>
-        </div>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h5" fontWeight={700}>My Work</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>What needs your attention</Typography>
+        </Box>
 
-        <div className="cds--tile p-4">
-          <TaskList tasks={data.allOpenTasks} fileMap={fileMap} />
-        </div>
+        <Card variant="outlined" sx={{ mb: 4 }}>
+          <CardContent><TaskList tasks={data.allOpenTasks} fileMap={fileMap} /></CardContent>
+        </Card>
 
-        <div>
-          <h3 className="text-lg font-semibold mb-3">Recently Updated Files</h3>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {data.recentlyUpdatedFiles.map((file) => (
-              <FileCard key={file.id} file={file} />
-            ))}
-          </div>
-        </div>
-      </main>
-    </div>
+        <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>Recently Updated Files</Typography>
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+          {data.recentlyUpdatedFiles.map((file) => <FileCard key={file.id} file={file} />)}
+        </Box>
+      </Container>
+    </Box>
   );
 }

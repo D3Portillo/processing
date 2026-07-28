@@ -1,3 +1,4 @@
+import { Container, Typography, Box } from "@mui/material";
 import { getRepository } from "@/app/lib/repo-instance";
 import { Nav } from "@/app/components/Nav";
 import { FileCard } from "@/app/components/FileCard";
@@ -9,19 +10,17 @@ export default async function AllFilesPage() {
   const files = await repo.getAllFiles();
 
   return (
-    <div className="min-h-screen">
+    <Box>
       <Nav active="files" />
-      <main className="mx-auto max-w-4xl px-6 py-8" style={{ marginTop: "3rem" }}>
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold">All Files</h2>
-          <p className="text-sm text-[var(--cds--text-secondary)] mt-1">{files.length} mortgage files</p>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {files.map((file) => (
-            <FileCard key={file.id} file={file} />
-          ))}
-        </div>
-      </main>
-    </div>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h5" fontWeight={700}>All Files</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>{files.length} mortgage files</Typography>
+        </Box>
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", lg: "1fr 1fr 1fr" }, gap: 2 }}>
+          {files.map((file) => <FileCard key={file.id} file={file} />)}
+        </Box>
+      </Container>
+    </Box>
   );
 }

@@ -1,17 +1,17 @@
-import { Tag } from "@carbon/react";
+import { Chip } from "@mui/material";
 import type { Stage } from "@/app/lib/types";
 
-const STAGE_TYPE: Record<Stage, "red" | "magenta" | "purple" | "blue" | "cyan" | "teal" | "green" | "gray"> = {
-  "Intake": "gray",
-  "Document Collection": "purple",
-  "Lender Review": "blue",
-  "Negotiation": "cyan",
-  "Approval": "green",
-  "Closing": "teal",
-  "Completed": "green",
-  "Rejected": "red",
+const STAGE_COLOR: Record<Stage, "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"> = {
+  "Intake": "default",
+  "Document Collection": "secondary",
+  "Lender Review": "info",
+  "Negotiation": "primary",
+  "Approval": "success",
+  "Closing": "primary",
+  "Completed": "success",
+  "Rejected": "error",
 };
 
 export function StageBadge({ stage }: { stage: Stage }) {
-  return <Tag type={STAGE_TYPE[stage]}>{stage}</Tag>;
+  return <Chip label={stage} size="small" color={STAGE_COLOR[stage]} variant="outlined" />;
 }

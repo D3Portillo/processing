@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Button, TextArea, Form, Stack } from "@carbon/react";
-import { Add } from "@carbon/icons-react";
+import { Button, TextField, Stack } from "@mui/material";
+import { Plus } from "lucide-react";
 import { addNoteAction } from "@/app/lib/actions";
 
 export function AddNoteForm({ fileId, authorId }: { fileId: string; authorId: string }) {
@@ -15,40 +15,26 @@ export function AddNoteForm({ fileId, authorId }: { fileId: string; authorId: st
     if (!body.trim()) return;
     startTransition(async () => {
       await addNoteAction({ fileId, authorId, body: body.trim() });
-      setBody("");
-      setExpanded(false);
+      setBody(""); setExpanded(false);
     });
   }
 
   if (!expanded) {
-    return (
-      <Button kind="ghost" size="sm" renderIcon={Add} onClick={() => setExpanded(true)}>
-        Add Note
-      </Button>
-    );
+    return <Button variant="outlined" size="small" startIcon={<Plus size={16} />} onClick={() => setExpanded(true)}>Add Note</Button>;
   }
 
   return (
-    <Form onSubmit={handleSubmit}>
-      <Stack gap={3}>
-        <TextArea
-          id="note-body"
-          labelText="New Note"
-          placeholder="Enter your note..."
-          rows={3}
-          value={body}
-          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setBody(e.target.value)}
-          autoFocus
-        />
-        <div className="flex justify-end gap-2">
-          <Button kind="secondary" size="sm" onClick={() => { setExpanded(false); setBody(""); }}>
-            Cancel
-          </Button>
-          <Button type="submit" size="sm" disabled={transitioning || !body.trim()}>
+    <form onSubmit={handleSubmit}>
+      <Stack spacing={2}>
+        <TextField label="New Note" multiline rows={3} fullWidth value={body} onChange={(e) => setBody(e.target.value)}
+          placeholder="Enter your note..." autoFocus />
+        <Stack direction="row" justifyContent="flex-end" spacing={1}>
+          <Button variant="outlined" size="small" onClick={() => { setExpanded(false); setBody(""); }}>Cancel</Button>
+          <Button type="submit" variant="contained" size="small" disabled={transitioning || !body.trim()}>
             {transitioning ? "Saving..." : "Save Note"}
           </Button>
-        </div>
+        </Stack>
       </Stack>
-    </Form>
+    </form>
   );
 }
