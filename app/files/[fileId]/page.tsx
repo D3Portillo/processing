@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Container, Box, Typography, Card, CardContent, Tabs, Tab, Chip, Avatar, Divider, Stack, Table, TableBody, TableCell, TableHead, TableRow, IconButton } from "@mui/material";
-import { ArrowLeft, Phone, Mail, MapPin, Calendar, FileText, Building, Clock } from "lucide-react";
+import { Phone, Mail, MapPin, Calendar, FileText, Building, Clock } from "lucide-react";
 import { getRepository } from "@/app/lib/repo-instance";
+import { Nav } from "@/app/components/Nav";
 import { StageBadge } from "@/app/components/StageBadge";
 import { StageSelector } from "@/app/components/StageSelector";
 import { TimelineItem } from "@/app/components/TimelineItem";
@@ -37,15 +38,12 @@ export default async function FileDetailPage({ params }: { params: Promise<{ fil
 
   return (
     <Box>
-      {/* Header */}
-      <Box component="header" sx={{ borderBottom: 1, borderColor: "divider", bgcolor: "background.paper", position: "sticky", top: 0, zIndex: 40 }}>
+      {/* Top Nav */}
+      <Nav active="tasks" />
+
+      {/* File sub-header */}
+      <Box sx={{ borderBottom: 1, borderColor: "divider", bgcolor: "background.paper" }}>
         <Container maxWidth="lg" sx={{ py: 2 }}>
-          <Link href="/" style={{ textDecoration: "none" }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 1, color: "text.secondary" }}>
-              <ArrowLeft size={16} />
-              <Typography variant="body2">Back</Typography>
-            </Box>
-          </Link>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 2 }}>
             <Box sx={{ minWidth: 0 }}>
               <Typography variant="h6" fontWeight={700} noWrap>{file.borrower.name}</Typography>
