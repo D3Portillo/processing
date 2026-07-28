@@ -6,8 +6,8 @@ import { AppBar, Toolbar, Typography, Container, Box } from "@mui/material";
 export function Nav({ active }: { active: "tasks" | "sales" | "files" }) {
   const links = [
     { href: "/", label: "Tasks", key: "tasks" as const },
-    { href: "/sales", label: "Sale Dates", key: "sales" as const },
-    { href: "/files", label: "All Files", key: "files" as const },
+    { href: "/sales", label: "Sales", key: "sales" as const },
+    { href: "/files", label: "Files", key: "files" as const },
   ];
 
   return (
