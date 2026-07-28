@@ -60,7 +60,7 @@ export function TaskList({ tasks, fileMap }: { tasks: Task[]; fileMap: Map<strin
         </Typography>
       ) : (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-          {filtered.map((task) => {
+          {filtered.map((task, index) => {
             const file = fileMap.get(task.fileId);
             const overdue = task.dueDate && isOverdue(task.dueDate) && !isToday(task.dueDate);
             const priorityColor = task.priority === "High" ? "error" : task.priority === "Medium" ? "warning" : "default";
@@ -69,7 +69,9 @@ export function TaskList({ tasks, fileMap }: { tasks: Task[]; fileMap: Map<strin
               <Link key={task.id} href={`/files/${task.fileId}`} style={{ textDecoration: "none" }}>
                 <Box sx={{
                   display: "flex", alignItems: "flex-start", gap: 1.5, p: 1.5, borderRadius: 1,
-                  cursor: "pointer", "&:hover": { bgcolor: "action.hover" },
+                  cursor: "pointer",
+                  bgcolor: index % 2 === 0 ? "transparent" : "action.hover",
+                  "&:hover": { bgcolor: "action.selected" },
                 }}>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Typography variant="body2" fontWeight={500}>{task.title}</Typography>
