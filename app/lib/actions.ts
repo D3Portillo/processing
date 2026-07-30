@@ -1,10 +1,16 @@
 "use server";
 
-import { getRepository } from "@/app/lib/repo-instance";
-import type { Stage, TaskPriority } from "@/app/lib/types";
+import {
+  updateFileStage as _updateFileStage,
+  assignFile as _assignFile,
+  createTask as _createTask,
+  completeTask as _completeTask,
+  addNote as _addNote,
+} from "./mock-data";
+import type { Stage, TaskPriority } from "./types";
 
 export async function completeTaskAction(taskId: string, actorId: string) {
-  await getRepository().completeTask(taskId, actorId);
+  _completeTask(taskId, actorId);
 }
 
 export async function createTaskAction(input: {
@@ -16,22 +22,17 @@ export async function createTaskAction(input: {
   priority: TaskPriority;
   actorId: string;
 }) {
-  await getRepository().createTask(input);
+  _createTask(input);
 }
 
-export async function addNoteAction(input: {
-  fileId: string;
-  authorId: string;
-  body: string;
-}) {
-  await getRepository().addNote(input);
+export async function addNoteAction(input: { fileId: string; authorId: string; body: string }) {
+  _addNote(input);
 }
 
 export async function updateStageAction(fileId: string, stage: Stage, actorId: string) {
-  await getRepository().updateFileStage(fileId, stage, actorId);
+  _updateFileStage(fileId, stage, actorId);
 }
 
-export async function seedDatabaseAction() {
-  const { seedDatabase } = await import("@/app/lib/seed");
-  await seedDatabase();
+export async function assignFileAction(fileId: string, specialistId: string | null, actorId: string) {
+  _assignFile(fileId, specialistId, actorId);
 }

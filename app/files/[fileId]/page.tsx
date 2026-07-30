@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Container, Box, Typography, Card, CardContent, Chip, Avatar, Divider, Stack, Table, TableBody, TableCell, TableHead, TableRow } from "@mui/material";
+import { Container, Box, Typography, Card, CardContent, Avatar, Divider, Stack, Table, TableBody, TableCell, TableHead, TableRow } from "@mui/material";
 import { Phone, Mail, MapPin, FileText, Clock, User } from "lucide-react";
-import { getRepository } from "@/app/lib/repo-instance";
+import { getFileById, getAllSpecialists, getAllLenders, getAllLenderContacts } from "@/app/lib/mock-data";
 import { Nav } from "@/app/components/Nav";
 import { FileMenu } from "@/app/components/FileMenu";
 import { AssignSelector } from "@/app/components/AssignSelector";
@@ -14,7 +14,6 @@ import { AddTaskDialog } from "@/app/components/AddTaskDialog";
 import { AddNoteForm } from "@/app/components/AddNoteForm";
 import { CompleteTaskButton } from "@/app/components/CompleteTaskButton";
 import { formatDate, formatDateTime, formatRelative, getInitials, isOverdue } from "@/app/lib/utils";
-import { seedDatabaseAction } from "@/app/lib/actions";
 import type { DocumentRecord } from "@/app/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -27,17 +26,13 @@ function formatFileSize(bytes: number): string {
 
 export default async function FileDetailPage({ params }: { params: Promise<{ fileId: string }> }) {
   const { fileId } = await params;
-  const repo = getRepository();
-
-  let file;
-  try { file = await repo.getFileById(fileId); }
-  catch { await seedDatabaseAction(); file = await repo.getFileById(fileId); }
+  const file = getFileById(fileId);
   if (!file) notFound();
 
-  const specialists = await repo.getAllSpecialists();
-  const lenders = await repo.getAllLenders();
-  const allPocs = await repo.getAllPocs();
-  const actorId = file.specialist.id;
+  const specialists = getAllSpecialists();
+  const lenders = getAllLenders();
+  const allPocs = getAllLenderContacts();
+  const actorId = file.specialist?.id ?? specialists[0]?.id ?? "";
   const openTasks = file.tasks.filter((t) => t.status === "Open");
   const completedTasks = file.tasks.filter((t) => t.status === "Completed");
 
@@ -51,7 +46,7 @@ export default async function FileDetailPage({ params }: { params: Promise<{ fil
         <Container maxWidth="lg" sx={{ py: 2 }}>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2 }}>
             <Box sx={{ minWidth: 0 }}>
-              <Typography variant="h6" fontWeight={700} noWrap>{file.borrower.name}</Typography>
+              <Typography variant="h6" noWrap sx={{ fontWeight: 700 }}>{file.borrower.name}</Typography>
             </Box>
             <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", flexShrink: 0 }}>
               <StageBadge stage={file.stage} />
@@ -59,7 +54,7 @@ export default async function FileDetailPage({ params }: { params: Promise<{ fil
             </Box>
           </Box>
           <Box sx={{ mt: 1.5 }}>
-            <AssignSelector current={file.specialist} specialists={specialists} />
+            <AssignSelector fileId={file.id} current={file.specialist} specialists={specialists} actorId={actorId} />
           </Box>
         </Container>
       </Box>
@@ -74,7 +69,7 @@ export default async function FileDetailPage({ params }: { params: Promise<{ fil
                 <User size={16} />
                 <Typography variant="overline" color="text.secondary">Borrower</Typography>
               </Box>
-              <Typography variant="subtitle1" fontWeight={600} sx={{ mt: 1 }}>{file.borrower.name}</Typography>
+              <Typography variant="subtitle1"  sx={{ mt: 1, fontWeight: 600}}>{file.borrower.name}</Typography>
               <Stack spacing={1} sx={{ mt: 1.5 }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}><Phone size={14} /><Typography variant="body2" color="text.secondary">{file.borrower.phone}</Typography></Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}><Mail size={14} /><Typography variant="body2" color="text.secondary">{file.borrower.email}</Typography></Box>
@@ -83,9 +78,12 @@ export default async function FileDetailPage({ params }: { params: Promise<{ fil
               <Box sx={{ mt: "auto" }}>
                 <Divider sx={{ mb: 1.5 }} />
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <Typography variant="caption" color="text.secondary">Loan #{file.borrower.loanNumber}</Typography>
-                  <Typography variant="body2" fontWeight={600}>
-                    ${file.borrower.monthlyPayment.toLocaleString()}<Box component="span" fontWeight={400} color="text.secondary" fontSize="0.75rem">/mo</Box>
+                  {/* TODO: replace with borrower ID once data is connected */}
+                  <Link href="https://force-energy-1679.lightning.force.com/lightning/r/Lead/00QPm00001L8UZ1MAN/view" target="_blank" style={{ textDecoration: "none" }}>
+                    <Typography variant="caption" sx={{ color: "primary.main", "&:hover": { textDecoration: "underline" } }}>Loan #{file.borrower.loanNumber}</Typography>
+                  </Link>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    ${file.borrower.monthlyPayment.toLocaleString()}<Box component="span" sx={{ fontWeight: 400, color: "text.secondary", fontSize: "0.75rem" }}>/mo</Box>
                   </Typography>
                 </Box>
               </Box>
@@ -95,7 +93,7 @@ export default async function FileDetailPage({ params }: { params: Promise<{ fil
           {/* Lender */}
           <Card variant="outlined">
             <CardContent>
-              <LenderCard lender={file.lender} pocs={allPocs.filter((p) => p.lenderId === file.lender.id)} saleDate={file.saleDate} />
+              <LenderCard lender={file.lender} contacts={allPocs.filter((p) => p.lenderId === file.lender.id)} saleDate={file.saleDate} />
             </CardContent>
           </Card>
         </Box>
@@ -118,11 +116,10 @@ export default async function FileDetailPage({ params }: { params: Promise<{ fil
                           <Box key={task.id} sx={{ display: "flex", alignItems: "flex-start", gap: 1, p: 1.5, borderRadius: 1, "&:hover": { bgcolor: "action.hover" } }}>
                             <CompleteTaskButton task={task} actorId={actorId} />
                             <Box sx={{ flex: 1, minWidth: 0 }}>
-                              <Typography variant="body2" fontWeight={500}>{task.title}</Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 500 }}>{task.title}</Typography>
                               <Box sx={{ display: "flex", gap: 1.5, mt: 0.75, alignItems: "center" }}>
-                                <Chip label={task.priority} size="small" color={task.priority === "High" ? "error" : task.priority === "Medium" ? "warning" : "default"} variant="outlined" sx={{ height: 20, fontSize: "0.7rem" }} />
                                 {task.dueDate && (
-                                  <Typography variant="caption" color={isOverdue(task.dueDate) ? "error" : "text.secondary"} fontWeight={isOverdue(task.dueDate) ? 600 : 400}>
+                                  <Typography variant="caption" color={isOverdue(task.dueDate) ? "error" : "text.secondary"} sx={{ fontWeight: isOverdue(task.dueDate) ? 600 : 400 }}>
                                     {isOverdue(task.dueDate) ? `Overdue · ${formatRelative(task.dueDate)}` : formatRelative(task.dueDate)}
                                   </Typography>
                                 )}
@@ -142,7 +139,7 @@ export default async function FileDetailPage({ params }: { params: Promise<{ fil
                           <Box key={task.id} sx={{ display: "flex", alignItems: "flex-start", gap: 1, p: 1.5, borderRadius: 1 }}>
                             <CompleteTaskButton task={task} actorId={actorId} />
                             <Box sx={{ flex: 1, minWidth: 0 }}>
-                              <Typography variant="body2" fontWeight={500} sx={{ textDecoration: "line-through", color: "text.secondary" }}>{task.title}</Typography>
+                              <Typography variant="body2"  sx={{ textDecoration: "line-through", color: "text.secondary", fontWeight: 500}}>{task.title}</Typography>
                               {task.completedAt && <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>Completed {formatRelative(task.completedAt)}</Typography>}
                             </Box>
                           </Box>
@@ -175,7 +172,7 @@ export default async function FileDetailPage({ params }: { params: Promise<{ fil
                           <Box key={note.id}>
                             <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
                               <Avatar sx={{ width: 24, height: 24, fontSize: "0.6rem", bgcolor: note.author.avatarColor }}>{getInitials(note.author.name)}</Avatar>
-                              <Typography variant="body2" fontWeight={600}>{note.author.name}</Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 600 }}>{note.author.name}</Typography>
                               <Typography variant="caption" color="text.secondary">{formatDateTime(note.createdAt)}</Typography>
                             </Box>
                             <Typography variant="body2" color="text.secondary" sx={{ pl: 4, mt: 0.5 }}>{note.body}</Typography>

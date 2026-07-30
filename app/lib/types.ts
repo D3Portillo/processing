@@ -49,10 +49,10 @@ export interface Lender {
   email: string;
 }
 
-export interface LenderPOC {
+export interface LenderContact {
   id: string;
-  name: string;
-  title: string;
+  department: string;
+  name: string | null; // optional — if null, department is the contact
   phone: string;
   email: string;
   lenderId: string;
@@ -71,9 +71,9 @@ export interface Borrower {
 export interface MortgageFile {
   id: string;
   borrower: Borrower;
-  specialist: Specialist;
+  specialist: Specialist | null;
   lender: Lender;
-  poc: LenderPOC | null;
+  poc: LenderContact | null;
   stage: Stage;
   saleDate: string | null;
   createdAt: string;

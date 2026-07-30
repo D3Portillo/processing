@@ -1,6 +1,6 @@
-# Pathway Mortgage Operations Portal
+# TRG Processing
 
-An internal workspace for mortgage relief specialists to manage active mortgage files. Designed around the daily workflow of calling lenders, following up with borrowers, tracking sale dates, and moving files through the relief process.
+An internal workspace for processing specialists to manage active mortgage files. Designed around the daily workflow of calling lenders, following up with borrowers, tracking sale dates, and moving files through the relief process.
 
 ## What It Does
 

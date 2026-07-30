@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { Box, Select, MenuItem, FormControl, Typography, Stack, Divider } from "@mui/material";
-import { Phone, Mail, Calendar, Building, User } from "lucide-react";
-import type { Lender, LenderPOC } from "@/app/lib/types";
+import { Phone, Mail, Calendar, Building, Users } from "lucide-react";
+import type { Lender, LenderContact } from "@/app/lib/types";
 import { formatDate, formatRelative, isOverdue } from "@/app/lib/utils";
 
-export function LenderCard({ lender, pocs, saleDate }: { lender: Lender; pocs: LenderPOC[]; saleDate: string | null }) {
-  const [pocId, setPocId] = useState(pocs[0]?.id ?? "");
-  const selected = pocs.find((p) => p.id === pocId) ?? null;
-  const overdue = saleDate && isOverdue(saleDate);
+export function LenderCard({ lender, contacts, saleDate }: { lender: Lender; contacts: LenderContact[]; saleDate: string | null }) {
+  const [contactId, setContactId] = useState(contacts[0]?.id ?? "");
+  const selected = contacts.find((c) => c.id === contactId) ?? null;
+  const pastSale = saleDate && isOverdue(saleDate);
 
   return (
     <Box>
@@ -17,36 +17,36 @@ export function LenderCard({ lender, pocs, saleDate }: { lender: Lender; pocs: L
         <Building size={16} />
         <Typography variant="overline" color="text.secondary">Lender</Typography>
       </Box>
-      <Typography variant="subtitle1" fontWeight={600}>{lender.name}</Typography>
+      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{lender.name}</Typography>
 
       <Typography variant="overline" color="text.secondary" sx={{ display: "block", mt: 2, mb: 1 }}>Point of Contact</Typography>
       <Box sx={{ display: "flex", alignItems: "center", gap: 0, flexWrap: "wrap", mb: 0.25 }}>
-        <User size={16} />
+        <Users size={16} />
         <FormControl size="small" sx={{ minWidth: 140, ml: 0, "& .MuiOutlinedInput-notchedOutline": { borderColor: "transparent" }, "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "divider" }, "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "primary.main" } }}>
           <Select
-            value={pocId}
-            onChange={(e) => setPocId(e.target.value)}
+            value={contactId}
+            onChange={(e) => setContactId(e.target.value)}
             displayEmpty
             renderValue={(selected) => {
-              const poc = pocs.find((p) => p.id === selected);
-              if (!poc) return <Typography variant="body2" color="text.secondary">Not assigned</Typography>;
+              const contact = contacts.find((c) => c.id === selected);
+              if (!contact) return <Typography variant="body2" color="text.secondary">Not assigned</Typography>;
               return (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-                  <Typography variant="body2" fontWeight={600}>{poc.name}</Typography>
-                  <Typography variant="caption" color="text.secondary">{poc.title}</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>{contact.department}</Typography>
+                  {contact.name && <Typography variant="caption" color="text.secondary">{contact.name}</Typography>}
                 </Box>
               );
             }}
             sx={{ "& .MuiSelect-select": { py: 0.5, px: 1, fontSize: "0.8rem" } }}
           >
-            {pocs.length === 0 ? (
+            {contacts.length === 0 ? (
               <MenuItem disabled value="">No contacts available</MenuItem>
             ) : (
-              pocs.map((poc) => (
-                <MenuItem key={poc.id} value={poc.id}>
+              contacts.map((contact) => (
+                <MenuItem key={contact.id} value={contact.id}>
                   <Box>
-                    <Typography variant="body2">{poc.name}</Typography>
-                    <Typography variant="caption" color="text.secondary">{poc.title}</Typography>
+                    <Typography variant="body2">{contact.department}</Typography>
+                    {contact.name && <Typography variant="caption" color="text.secondary">{contact.name}</Typography>}
                   </Box>
                 </MenuItem>
               ))
@@ -69,12 +69,19 @@ export function LenderCard({ lender, pocs, saleDate }: { lender: Lender; pocs: L
 
       <Divider sx={{ my: 1.5 }} />
       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-        <Calendar size={16} strokeWidth={2} style={{ color: overdue ? "#d32f2f" : "inherit" }} />
+        <Calendar size={16} strokeWidth={2} />
         <Box>
           <Typography variant="caption" color="text.secondary">Sale Date</Typography>
-          <Typography variant="body2" fontWeight={600} color={overdue ? "error" : "text.primary"}>
-            {saleDate ? `${formatDate(saleDate)} (${formatRelative(saleDate)})` : "N/A"}
-          </Typography>
+          <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5 }}>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              {saleDate ? formatDate(saleDate) : "N/A"}
+            </Typography>
+            {saleDate && (
+              <Typography variant="caption" color={pastSale ? "error" : "text.secondary"} sx={{ fontWeight: 600 }}>
+                ({formatRelative(saleDate)})
+              </Typography>
+            )}
+          </Box>
         </Box>
       </Box>
     </Box>

@@ -16,7 +16,7 @@ export function formatRelative(date: Date | string | number): string {
   if (diffDays === 0) return "Today";
   if (diffDays === 1) return "Tomorrow";
   if (diffDays === -1) return "Yesterday";
-  if (diffDays < 0) return `${Math.abs(diffDays)}d overdue`;
+  if (diffDays < 0) return `${Math.abs(diffDays)}d ago`;
   if (diffDays <= 7) return `In ${diffDays}d`;
   return formatDate(d);
 }

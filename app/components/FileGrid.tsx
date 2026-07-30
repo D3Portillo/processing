@@ -6,7 +6,7 @@ import { Search } from "lucide-react";
 import type { MortgageFile } from "@/app/lib/types";
 import { FileCard } from "./FileCard";
 
-type ScopeOption = "mine" | "all";
+type ScopeOption = "mine" | "unassigned" | "all";
 
 export function FileGrid({ files, currentSpecialistId }: { files: MortgageFile[]; currentSpecialistId: string }) {
   const [query, setQuery] = useState("");
@@ -16,7 +16,9 @@ export function FileGrid({ files, currentSpecialistId }: { files: MortgageFile[]
     let result = files;
 
     if (scope === "mine") {
-      result = result.filter((f) => f.specialist.id === currentSpecialistId);
+      result = result.filter((f) => f.specialist?.id === currentSpecialistId);
+    } else if (scope === "unassigned") {
+      result = result.filter((f) => !f.specialist);
     }
 
     if (query.trim()) {
@@ -42,12 +44,14 @@ export function FileGrid({ files, currentSpecialistId }: { files: MortgageFile[]
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           sx={{ flexGrow: 1 }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search size={18} />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search size={18} />
+                </InputAdornment>
+              ),
+            },
           }}
         />
         <FormControl size="small" sx={{ minWidth: 170 }}>
@@ -56,6 +60,7 @@ export function FileGrid({ files, currentSpecialistId }: { files: MortgageFile[]
             onChange={(e) => setScope(e.target.value as ScopeOption)}
           >
             <MenuItem value="mine">Assigned to Me</MenuItem>
+            <MenuItem value="unassigned">Unassigned</MenuItem>
             <MenuItem value="all">All Files</MenuItem>
           </Select>
         </FormControl>

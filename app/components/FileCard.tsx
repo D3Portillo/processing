@@ -12,7 +12,7 @@ export function FileCard({ file }: { file: MortgageFile }) {
         <CardContent>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 1, mb: 1 }}>
             <Box sx={{ minWidth: 0, flex: 1 }}>
-              <Typography variant="subtitle1" fontWeight={600} noWrap>{file.borrower.name}</Typography>
+              <Typography variant="subtitle1" noWrap sx={{ fontWeight: 600 }}>{file.borrower.name}</Typography>
               <Typography variant="body2" color="text.secondary" noWrap>{file.lender.name}</Typography>
             </Box>
             <StageBadge stage={file.stage} />
@@ -20,12 +20,12 @@ export function FileCard({ file }: { file: MortgageFile }) {
           <Box sx={{ display: "flex", gap: 2, mt: 1.5, color: "text.secondary" }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
               <User size={14} />
-              <Typography variant="caption">{file.specialist.name}</Typography>
+              <Typography variant="caption">{file.specialist ? file.specialist.name : "Unassigned"}</Typography>
             </Box>
             {file.saleDate && (
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                 <Calendar size={14} />
-                <Typography variant="caption" color={isOverdue(file.saleDate) ? "error" : "text.secondary"} fontWeight={isOverdue(file.saleDate) ? 600 : 400}>
+                <Typography variant="caption" color={isOverdue(file.saleDate) ? "error" : "text.secondary"} sx={{ fontWeight: isOverdue(file.saleDate) ? 600 : 400 }}>
                   {formatRelative(file.saleDate)}
                 </Typography>
               </Box>
@@ -50,8 +50,8 @@ export function TaskRow({ task, showFile = false, file }: { task: Task; showFile
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography
             variant="body2"
-            fontWeight={500}
-            sx={task.status === "Completed" ? { textDecoration: "line-through", color: "text.secondary" } : {}}
+            
+            sx={task.status === "Completed" ? { textDecoration: "line-through", color: "text.secondary", fontWeight: 500} : {}}
           >
             {task.title}
           </Typography>
@@ -63,7 +63,7 @@ export function TaskRow({ task, showFile = false, file }: { task: Task; showFile
           <Box sx={{ display: "flex", gap: 1.5, mt: 0.75, alignItems: "center" }}>
             <Chip label={task.priority} size="small" color={priorityColor as "error" | "warning" | "default"} variant="outlined" sx={{ height: 20, fontSize: "0.7rem" }} />
             {task.dueDate && (
-              <Typography variant="caption" color={overdue ? "error" : "text.secondary"} fontWeight={overdue ? 600 : 400}>
+              <Typography variant="caption" color={overdue ? "error" : "text.secondary"} sx={{ fontWeight: overdue ? 600 : 400 }}>
                 {overdue ? `Overdue · ${formatRelative(task.dueDate)}` : formatRelative(task.dueDate)}
               </Typography>
             )}
@@ -84,14 +84,14 @@ export function SaleDateCard({ file }: { file: MortgageFile }) {
         <CardContent>
           <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
             <Box sx={{ minWidth: 0, flex: 1 }}>
-              <Typography variant="subtitle1" fontWeight={600} noWrap>{file.borrower.name}</Typography>
+              <Typography variant="subtitle1" noWrap sx={{ fontWeight: 600 }}>{file.borrower.name}</Typography>
               <Typography variant="body2" color="text.secondary" noWrap>{file.lender.name}</Typography>
               <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block", mt: 0.5 }}>{file.borrower.propertyAddress}</Typography>
             </Box>
             <Box sx={{ textAlign: "right", flexShrink: 0 }}>
               <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 0.5 }}>
                 <Calendar size={14} />
-                <Typography variant="body2" fontWeight={700} color={overdue ? "error" : "text.primary"}>
+                <Typography variant="body2" color={overdue ? "error" : "text.primary"} sx={{ fontWeight: 700 }}>
                   {file.saleDate ? formatDate(file.saleDate) : "—"}
                 </Typography>
               </Box>

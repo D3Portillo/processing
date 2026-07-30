@@ -9,7 +9,7 @@ export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => 
   const [query, setQuery] = useState("");
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" PaperProps={{ sx: { position: "fixed", top: 80, left: "50%", transform: "translateX(-50%)", m: 0, width: "90%", maxWidth: 560 } }}>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" slotProps={{ paper: { sx: { position: "fixed", top: 80, left: "50%", transform: "translateX(-50%)", m: 0, width: "90%", maxWidth: 560 } } }}>
       <DialogContent sx={{ p: 0 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, p: 2, borderBottom: 1, borderColor: "divider" }}>
           <Search size={20} style={{ color: "text.secondary" }} />
@@ -20,7 +20,7 @@ export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => 
             placeholder="Search people, files, lenders..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            InputProps={{ disableUnderline: true, sx: { fontSize: "1rem" } }}
+            slotProps={{ input: { disableUnderline: true, sx: { fontSize: "1rem" } } }}
           />
           <IconButton size="small" onClick={onClose}>
             <X size={18} />

@@ -107,7 +107,7 @@ export function TaskList({ tasks, fileMap, currentSpecialistId }: { tasks: Task[
                   "&:hover": { bgcolor: "rgba(0,0,0,0.05)" },
                 }}>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="body2" fontWeight={500}>{task.title}</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>{task.title}</Typography>
                     {file && (
                       <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block", mt: 0.25 }}>
                         {file.borrower.name} — {file.lender.name}
@@ -116,7 +116,7 @@ export function TaskList({ tasks, fileMap, currentSpecialistId }: { tasks: Task[
                     <Box sx={{ display: "flex", gap: 1.5, mt: 0.75, alignItems: "center" }}>
                       <Chip label={task.priority} size="small" color={priorityColor as "error" | "warning" | "default"} variant="outlined" sx={{ height: 20, fontSize: "0.7rem" }} />
                       {task.dueDate && (
-                        <Typography variant="caption" color={overdue ? "error" : "text.secondary"} fontWeight={overdue ? 600 : 400}>
+                        <Typography variant="caption" color={overdue ? "error" : "text.secondary"} sx={{ fontWeight: overdue ? 600 : 400 }}>
                           {overdue ? `Overdue · ${formatRelative(task.dueDate)}` : formatRelative(task.dueDate)}
                         </Typography>
                       )}

@@ -1,20 +1,19 @@
 import { Container, Typography, Box, Card, CardContent } from "@mui/material";
-import { getRepository } from "@/app/lib/repo-instance";
+import { getDashboardData } from "@/app/lib/mock-data";
 import { Nav } from "@/app/components/Nav";
 import { SaleDateCard } from "@/app/components/FileCard";
 
 export const dynamic = "force-dynamic";
 
 export default async function SalesPage() {
-  const repo = getRepository();
-  const data = await repo.getDashboardData();
+  const data = getDashboardData();
 
   return (
     <Box>
       <Nav active="sales" />
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h5" fontWeight={700}>Upcoming Sale Dates</Typography>
+          <Typography variant="h5" sx={{ fontWeight: 700 }}>Upcoming Sale Dates (14 days)</Typography>
         </Box>
         {data.upcomingSaleDates.length === 0 ? (
           <Card variant="outlined"><CardContent><Typography color="text.secondary" sx={{ textAlign: "center", py: 4 }}>No upcoming sale dates</Typography></CardContent></Card>

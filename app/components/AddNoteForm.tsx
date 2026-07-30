@@ -28,7 +28,7 @@ export function AddNoteForm({ fileId, authorId }: { fileId: string; authorId: st
       <Stack spacing={2}>
         <TextField label="New Note" multiline rows={3} fullWidth value={body} onChange={(e) => setBody(e.target.value)}
           placeholder="Enter your note..." autoFocus />
-        <Stack direction="row" justifyContent="flex-end" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{ justifyContent: "flex-end" }}>
           <Button variant="outlined" size="small" onClick={() => { setExpanded(false); setBody(""); }}>Cancel</Button>
           <Button type="submit" variant="contained" size="small" disabled={transitioning || !body.trim()}>
             {transitioning ? "Saving..." : "Save Note"}
