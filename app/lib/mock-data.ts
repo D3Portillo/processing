@@ -10,7 +10,6 @@ import type {
   Lender,
   LenderContact,
   Stage,
-  TaskPriority,
 } from "./types";
 
 // ─── Client-side Mock Store ──────────────────────────────────
@@ -20,11 +19,11 @@ import type {
 // ─── Static Data ─────────────────────────────────────────────
 
 const SPECIALISTS: Specialist[] = [
-  { id: "sp-1", name: "Sarah Chen", email: "sarah.chen@trgprocessing.com", avatarColor: "#3b82f6" },
-  { id: "sp-2", name: "Marcus Johnson", email: "marcus.johnson@trgprocessing.com", avatarColor: "#8b5cf6" },
-  { id: "sp-3", name: "Elena Rodriguez", email: "elena.rodriguez@trgprocessing.com", avatarColor: "#ec4899" },
-  { id: "sp-4", name: "David Park", email: "david.park@trgprocessing.com", avatarColor: "#f59e0b" },
-  { id: "sp-5", name: "Jessica Williams", email: "jessica.williams@trgprocessing.com", avatarColor: "#10b981" },
+  { id: "sp-1", name: "Alex Walker", email: "alex.walker@retentiongroup.org", avatarColor: "#3b82f6" },
+  { id: "sp-2", name: "Emma Koons", email: "emma.koons@retentiongroup.org", avatarColor: "#8b5cf6" },
+  { id: "sp-3", name: "Julia Banks", email: "julia.banks@retentiongroup.org", avatarColor: "#ec4899" },
+  { id: "sp-4", name: "Crystal Baeza", email: "crystal.baeza@retentiongroup.org", avatarColor: "#f59e0b" },
+  { id: "sp-5", name: "Lisa Wilson", email: "lisa.wilson@retentiongroup.org", avatarColor: "#10b981" },
 ];
 
 const LENDERS: Lender[] = [
@@ -51,9 +50,9 @@ const BORROWER_LAST_NAMES = ["Smith", "Johnson", "Williams", "Brown", "Jones", "
 const STREETS = ["Oak Ave", "Maple Dr", "Cedar Ln", "Pine St", "Elm Way", "Birch Rd", "Walnut Ct", "Cherry Blvd", "Spruce Pl", "Willow Cir", "Aspen Dr", "Hickory Ln", "Magnolia St", "Sycamore Ave", "Juniper Way", "Poplar Rd", "Chestnut Dr", "Hawthorne Ln", "Laurel St", "Dogwood Ct", "Fremont Blvd", "San Mateo Dr", "Veterans Way", "Heritage Ln", "Riverside Dr", "Highland Ave", "Park View Ct", "Sunset Blvd"];
 const CITIES = [{ city: "Santa Ana", state: "CA" }, { city: "Anaheim", state: "CA" }, { city: "Long Beach", state: "CA" }, { city: "Riverside", state: "CA" }, { city: "Corona", state: "CA" }, { city: "Garden Grove", state: "CA" }, { city: "Huntington Beach", state: "CA" }, { city: "Irvine", state: "CA" }, { city: "Costa Mesa", state: "CA" }, { city: "Fullerton", state: "CA" }];
 
-const STAGES: Stage[] = ["Intake", "Document Collection", "Lender Review", "Negotiation", "Approval", "Closing", "Completed", "Rejected"];
+const STAGES: Stage[] = ["Processing", "TPA Pending", "Sub Pending", "Submitted", "Underwriting", "Missing Documents", "Approved", "Pending Approved", "Denied", "Escalation", "Closed"];
 
-const TASK_TITLES = ["Call lender for status update", "Request payoff statement", "Follow up on hardship letter", "Send financial worksheet to borrower", "Review bank statements", "Submit modification package to lender", "Call borrower for missing documents", "Schedule appraisal", "Review title report", "Confirm sale date with attorney", "Request reinstatement quote", "Follow up on trial payment plan", "Upload income verification", "Call lender to negotiate terms", "Send forbearance agreement to borrower", "Review NACA submission", "Confirm HUD counseling completion", "Request loan servicer notes", "Prepare denial letter", "Submit appeal package", "Verify borrower employment", "Request updated tax returns", "Contact housing counselor", "Review escrow analysis", "Schedule borrower call", "Send welcome packet", "Verify insurance coverage", "Request property inspection report", "Follow up on short sale offer", "Confirm deed-in-lieu eligibility"];
+const TASK_TITLES = ["Send Welcome Email", "Complete Welcome Call", "7 Day Follow Up: Call Lender", "7 Day Follow Up: Call Homeowner", "Prepare Submission Package", "Submit Package to Lender", "Request Missing Documents", "14 Day Follow Up: Call Lender", "Notify Homeowner of Approval", "Send Escalation Letter"];
 
 const NOTE_BODIES = ["Called lender — they need updated bank statements (last 60 days). Borrower notified.", "Borrower confirmed hardship is due to job loss. Severance ends next month.", "Lender received the modification package. Assigned to negotiator Maria Torres.", "Sale date postponed from Aug 15 to Sep 20. Confirmed with attorney's office.", "Borrower struggling to get W-2 from previous employer. Will use last paystub instead.", "Trial payment plan approved: $1,850/mo for 3 months. Starting Sep 1.", "Lender denied modification — DTI ratio too high. Preparing appeal.", "Borrower sent all requested docs via portal. Package is complete.", "Spoke with HUD counselor — they'll submit case within 48 hours.", "Lender requesting property tax bill. Borrower will upload today.", "Escalated to supervisor at lender. Got reference number: LM-2026-4521.", "Borrower filed Chapter 13 bankruptcy. Sale date automatically stayed.", "Short sale offer received at $385K. Lender reviewing.", "Borrower's income increased — got new job. Re-running affordability analysis.", "Lender approved forbearance for 6 months. Payments resume Mar 2027.", "Called borrower — no answer. Left voicemail. Will try again tomorrow.", "Lender says package was incomplete. Missing hardship affidavit. Resubmitting.", "Deed-in-lieu approved. Borrower reviewing deed transfer paperwork.", "Trial payments completed successfully. Permanent modification under review.", "Borrower wants to withdraw. Considering reinstatement instead."];
 
@@ -148,7 +147,6 @@ function getStore(): Store {
       const tid = `tk-${i}-${t}`;
       const title = pick(TASK_TITLES, s);
       const ts = pick(SPECIALISTS, s);
-      const priority = pick(["High", "Medium", "Low"] as TaskPriority[], s);
       const done = s() < 0.35;
       const tcAt = daysAgo(randomInt(1, 30, s));
       let dd: string | null = null;
@@ -157,7 +155,7 @@ function getStore(): Store {
       else if (dr < 0.35) dd = daysFromNow(0);
       else if (dr < 0.5) dd = daysFromNow(1);
       else if (dr < 0.8) dd = daysFromNow(randomInt(2, 21, s));
-      tasks.push({ id: tid, fileId, title, description: null, assignedTo: ts, dueDate: dd, priority, status: done ? "Completed" : "Open", createdAt: tcAt, completedAt: done ? daysAgo(randomInt(0, 5, s)) : null });
+      tasks.push({ id: tid, fileId, title, description: null, assignedTo: ts, dueDate: dd, status: done ? "Completed" : "Open", createdAt: tcAt, completedAt: done ? daysAgo(randomInt(0, 5, s)) : null });
       timeline.push({ id: `tl-${i}-t${t}`, fileId, type: done ? "task_completed" : "task_created", actor: ts, description: done ? `Task completed: ${title}` : `Task created: ${title}`, metadata: { taskId: tid }, createdAt: done ? daysAgo(randomInt(0, 5, s)) : tcAt });
     }
 
@@ -236,7 +234,7 @@ export function getDashboardData() {
   return {
     allOpenTasks: s.tasks.filter((t) => t.status === "Open"),
     upcomingSaleDates: s.files
-      .filter((f) => f.saleDate && f.saleDate >= now && f.saleDate <= in14 && f.stage !== "Completed" && f.stage !== "Rejected")
+      .filter((f) => f.saleDate && f.saleDate >= now && f.saleDate <= in14 && f.stage !== "Closed" && f.stage !== "Denied")
       .sort((a, b) => (a.saleDate! < b.saleDate! ? -1 : 1))
       .slice(0, 10),
     recentlyUpdatedFiles: [...s.files].sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1)).slice(0, 8),
@@ -274,14 +272,14 @@ export function assignFile(fileId: string, specialistId: string | null, actorId:
   version++; notify();
 }
 
-export function createTask(input: { fileId: string; title: string; description?: string; assignedToId: string; dueDate?: string; priority: TaskPriority; actorId: string }): Task {
+export function createTask(input: { fileId: string; title: string; description?: string; assignedToId: string; dueDate?: string; actorId: string }): Task {
   const s = getStore();
   const now = nowISO();
   const id = crypto.randomUUID();
   const specialist = s.specialists.find((sp) => sp.id === input.assignedToId) ?? s.specialists[0];
   const file = s.files.find((f) => f.id === input.fileId);
   if (file) file.updatedAt = now;
-  const task: Task = { id, fileId: input.fileId, title: input.title, description: input.description ?? null, assignedTo: specialist, dueDate: input.dueDate ?? null, priority: input.priority, status: "Open", createdAt: now, completedAt: null };
+  const task: Task = { id, fileId: input.fileId, title: input.title, description: input.description ?? null, assignedTo: specialist, dueDate: input.dueDate ?? null, status: "Open", createdAt: now, completedAt: null };
   s.tasks.push(task);
   const actor = s.specialists.find((sp) => sp.id === input.actorId) ?? s.specialists[0];
   s.timeline.push({ id: crypto.randomUUID(), fileId: input.fileId, type: "task_created", actor, description: `Task created: ${input.title}`, metadata: { taskId: id }, createdAt: now });

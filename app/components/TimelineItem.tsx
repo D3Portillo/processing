@@ -35,7 +35,7 @@ export function TimelineItem({ event }: { event: TimelineEvent }) {
         <Box sx={{ width: "1px", flex: 1, bgcolor: "divider", minHeight: 24 }} />
       </Box>
       <Box sx={{ pb: 3, flex: 1 }}>
-        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
           {label}
         </Typography>
         <Typography variant="body2" sx={{ mt: 0.25 }}>{event.description}</Typography>

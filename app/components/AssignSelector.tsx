@@ -39,7 +39,7 @@ export function AssignSelector({ fileId, current, specialists, actorId }: { file
               return (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Typography variant="body2" color="text.secondary">Assigned to</Typography>
-                  <Box component="span" sx={{ fontWeight: 600, color: "text.secondary" }}>Unassigned</Box>
+                  <Box component="span" sx={{ fontWeight: 500, color: "text.secondary" }}>Unassigned</Box>
                 </Box>
               );
             }
@@ -47,7 +47,7 @@ export function AssignSelector({ fileId, current, specialists, actorId }: { file
             return (
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Typography variant="body2" color="text.secondary">Assigned to</Typography>
-                <Box component="span" sx={{ fontWeight: 600, color: "text.primary" }}>{sp?.name}</Box>
+                <Box component="span" sx={{ fontWeight: 500, color: "text.primary" }}>{sp?.name}</Box>
               </Box>
             );
           }}

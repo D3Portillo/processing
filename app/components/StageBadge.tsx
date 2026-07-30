@@ -2,14 +2,17 @@ import { Chip } from "@mui/material";
 import type { Stage } from "@/app/lib/types";
 
 const STAGE_COLOR: Record<Stage, "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"> = {
-  "Intake": "default",
-  "Document Collection": "secondary",
-  "Lender Review": "info",
-  "Negotiation": "primary",
-  "Approval": "success",
-  "Closing": "primary",
-  "Completed": "success",
-  "Rejected": "error",
+  "Processing": "info",
+  "TPA Pending": "default",
+  "Sub Pending": "default",
+  "Submitted": "primary",
+  "Underwriting": "secondary",
+  "Missing Documents": "warning",
+  "Approved": "success",
+  "Pending Approved": "primary",
+  "Denied": "error",
+  "Escalation": "error",
+  "Closed": "success",
 };
 
 export function StageBadge({ stage }: { stage: Stage }) {

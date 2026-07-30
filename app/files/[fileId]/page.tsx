@@ -45,7 +45,7 @@ export default function FileDetailPage() {
         <Container maxWidth="lg" sx={{ py: 2 }}>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2 }}>
             <Box sx={{ minWidth: 0 }}>
-              <Typography variant="h6" sx={{ fontWeight: 700 }} noWrap>{file.borrower.name}</Typography>
+              <Typography variant="h6" sx={{ fontWeight: 500 }} noWrap>{file.borrower.name}</Typography>
             </Box>
             <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", flexShrink: 0 }}>
               <StageBadge stage={file.stage} />
@@ -67,7 +67,7 @@ export default function FileDetailPage() {
                 <User size={16} />
                 <Typography variant="overline" color="text.secondary">Borrower</Typography>
               </Box>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600, mt: 1 }}>{file.borrower.name}</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 500, mt: 1 }}>{file.borrower.name}</Typography>
               <Stack spacing={1} sx={{ mt: 1.5 }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}><Phone size={14} /><Typography variant="body2" color="text.secondary">{file.borrower.phone}</Typography></Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}><Mail size={14} /><Typography variant="body2" color="text.secondary">{file.borrower.email}</Typography></Box>
@@ -80,7 +80,7 @@ export default function FileDetailPage() {
                   <Link href="https://force-energy-1679.lightning.force.com/lightning/r/Lead/00QPm00001L8UZ1MAN/view" target="_blank" style={{ textDecoration: "none" }}>
                     <Typography variant="caption" sx={{ color: "primary.main", "&:hover": { textDecoration: "underline" } }}>Loan #{file.borrower.loanNumber}</Typography>
                   </Link>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
                     ${file.borrower.monthlyPayment.toLocaleString()}<Box component="span" sx={{ fontWeight: 400, color: "text.secondary", fontSize: "0.75rem" }}>/mo</Box>
                   </Typography>
                 </Box>
@@ -154,7 +154,7 @@ export default function FileDetailPage() {
               <Card variant="outlined" key="timeline">
                 <CardContent>
                   {file.timeline.length === 0 ? <Typography color="text.secondary" sx={{ textAlign: "center", py: 4 }}>No timeline events</Typography> :
-                    <Box>{[...file.timeline].reverse().map((event) => <TimelineItem key={event.id} event={event} />)}</Box>}
+                    <Box>{file.timeline.map((event) => <TimelineItem key={event.id} event={event} />)}</Box>}
                 </CardContent>
               </Card>
             ),
@@ -166,11 +166,11 @@ export default function FileDetailPage() {
                     <AddNoteForm fileId={file.id} authorId={actorId} />
                     {file.notes.length === 0 ? <Typography color="text.secondary" sx={{ textAlign: "center", py: 4 }}>No notes yet</Typography> :
                       <Stack spacing={2}>
-                        {[...file.notes].reverse().map((note) => (
+                        {file.notes.map((note) => (
                           <Box key={note.id}>
                             <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
                               <Avatar sx={{ width: 24, height: 24, fontSize: "0.6rem", bgcolor: note.author.avatarColor }}>{getInitials(note.author.name)}</Avatar>
-                              <Typography variant="body2" sx={{ fontWeight: 600 }}>{note.author.name}</Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 500 }}>{note.author.name}</Typography>
                               <Typography variant="caption" color="text.secondary">{formatDateTime(note.createdAt)}</Typography>
                             </Box>
                             <Typography variant="body2" color="text.secondary" sx={{ pl: 4, mt: 0.5 }}>{note.body}</Typography>

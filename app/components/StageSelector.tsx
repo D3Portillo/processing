@@ -23,7 +23,7 @@ export function StageSelector({ fileId, currentStage, actorId }: { fileId: strin
         onClick={(e) => setAnchorEl(e.currentTarget)}
         sx={{
           textTransform: "none",
-          fontWeight: 600,
+          fontWeight: 500,
           color: "text.primary",
           border: 1,
           borderColor: "divider",

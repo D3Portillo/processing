@@ -7,7 +7,7 @@ import {
   Menu, ListItemIcon, ListItemText, Stack,
 } from "@mui/material";
 import { Plus, Phone } from "lucide-react";
-import type { Specialist, TaskPriority } from "@/app/lib/types";
+import type { Specialist } from "@/app/lib/types";
 import { createTask, useStore } from "@/app/lib/mock-data";
 
 export function AddTaskDialog({ fileId, specialists, actorId }: { fileId: string; specialists: Specialist[]; actorId: string }) {
@@ -17,18 +17,16 @@ export function AddTaskDialog({ fileId, specialists, actorId }: { fileId: string
   const [title, setTitle] = useState("");
   const [assignTo, setAssignTo] = useState(specialists[0]?.id ?? "");
   const [dueDate, setDueDate] = useState("");
-  const [priority, setPriority] = useState<TaskPriority>("Medium");
   const [description, setDescription] = useState("");
 
   function openBlank() {
-    setTitle(""); setPriority("Medium"); setDescription(""); setDueDate("");
+    setTitle(""); setDescription(""); setDueDate("");
     setOpen(true);
     setAnchorEl(null);
   }
 
   function openFollowUp() {
     setTitle("Follow up");
-    setPriority("High");
     setOpen(true);
     setAnchorEl(null);
   }
@@ -38,9 +36,9 @@ export function AddTaskDialog({ fileId, specialists, actorId }: { fileId: string
     createTask({
       fileId, title: title.trim(), description: description.trim() || undefined,
       assignedToId: assignTo, dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
-      priority, actorId,
+      actorId,
     });
-    setTitle(""); setDescription(""); setDueDate(""); setPriority("Medium");
+    setTitle(""); setDescription(""); setDueDate("");
     setOpen(false);
   }
 
@@ -78,14 +76,6 @@ export function AddTaskDialog({ fileId, specialists, actorId }: { fileId: string
             </FormControl>
             <TextField label="Due Date" type="date" fullWidth value={dueDate} onChange={(e) => setDueDate(e.target.value)}
               slotProps={{ inputLabel: { shrink: true } }} />
-            <FormControl fullWidth>
-              <InputLabel>Priority</InputLabel>
-              <Select value={priority} label="Priority" onChange={(e) => setPriority(e.target.value as TaskPriority)}>
-                <MenuItem value="High">High</MenuItem>
-                <MenuItem value="Medium">Medium</MenuItem>
-                <MenuItem value="Low">Low</MenuItem>
-              </Select>
-            </FormControl>
             <TextField label="Description (optional)" fullWidth multiline rows={2} value={description} onChange={(e) => setDescription(e.target.value)} />
           </Stack>
         </DialogContent>

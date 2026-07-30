@@ -31,7 +31,7 @@ export function Nav({ active }: { active: "tasks" | "sales" | "files" | "people"
         <Container maxWidth="lg">
           <Toolbar disableGutters sx={{ gap: 2 }}>
             <Link href="/" style={{ textDecoration: "none" }}>
-              <Typography variant="h6" component="div" sx={{ fontWeight: 700, flexGrow: 0, color: "text.primary", cursor: "pointer" }}>
+              <Typography variant="h6" component="div" sx={{ fontWeight: 500, flexGrow: 0, color: "text.primary", cursor: "pointer" }}>
                 Processing
               </Typography>
             </Link>

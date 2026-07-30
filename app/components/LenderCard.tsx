@@ -17,7 +17,7 @@ export function LenderCard({ lender, contacts, saleDate }: { lender: Lender; con
         <Building size={16} />
         <Typography variant="overline" color="text.secondary">Lender</Typography>
       </Box>
-      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{lender.name}</Typography>
+      <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>{lender.name}</Typography>
 
       <Typography variant="overline" color="text.secondary" sx={{ display: "block", mt: 2, mb: 1 }}>Point of Contact</Typography>
       <Box sx={{ display: "flex", alignItems: "center", gap: 0, flexWrap: "wrap", mb: 0.25 }}>
@@ -32,7 +32,7 @@ export function LenderCard({ lender, contacts, saleDate }: { lender: Lender; con
               if (!contact) return <Typography variant="body2" color="text.secondary">Not assigned</Typography>;
               return (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>{contact.department}</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>{contact.department}</Typography>
                   {contact.name && <Typography variant="caption" color="text.secondary">{contact.name}</Typography>}
                 </Box>
               );
@@ -73,11 +73,11 @@ export function LenderCard({ lender, contacts, saleDate }: { lender: Lender; con
         <Box>
           <Typography variant="caption" color="text.secondary">Sale Date</Typography>
           <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5 }}>
-            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
               {saleDate ? formatDate(saleDate) : "N/A"}
             </Typography>
             {saleDate && (
-              <Typography variant="caption" color={pastSale ? "error" : "text.secondary"} sx={{ fontWeight: 600 }}>
+              <Typography variant="caption" color={pastSale ? "error" : "text.secondary"} sx={{ fontWeight: 500 }}>
                 ({formatRelative(saleDate)})
               </Typography>
             )}

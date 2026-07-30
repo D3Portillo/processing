@@ -24,7 +24,7 @@ export function FileMenu({ fileId, currentStage, actorId }: { fileId: string; cu
         onClick={(e) => setAnchorEl(e.currentTarget)}
         sx={{
           textTransform: "none",
-          fontWeight: 600,
+          fontWeight: 500,
           color: "text.primary",
           border: 1,
           borderColor: "divider",

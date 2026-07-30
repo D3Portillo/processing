@@ -3,27 +3,32 @@
 // The repository layer maps between DB rows and these domain types.
 
 export type Stage =
-  | "Intake"
-  | "Document Collection"
-  | "Lender Review"
-  | "Negotiation"
-  | "Approval"
-  | "Closing"
-  | "Completed"
-  | "Rejected";
+  | "Processing"
+  | "TPA Pending"
+  | "Sub Pending"
+  | "Submitted"
+  | "Underwriting"
+  | "Missing Documents"
+  | "Approved"
+  | "Pending Approved"
+  | "Denied"
+  | "Escalation"
+  | "Closed";
 
 export const STAGES: Stage[] = [
-  "Intake",
-  "Document Collection",
-  "Lender Review",
-  "Negotiation",
-  "Approval",
-  "Closing",
-  "Completed",
-  "Rejected",
+  "Processing",
+  "TPA Pending",
+  "Sub Pending",
+  "Submitted",
+  "Underwriting",
+  "Missing Documents",
+  "Approved",
+  "Pending Approved",
+  "Denied",
+  "Escalation",
+  "Closed",
 ];
 
-export type TaskPriority = "High" | "Medium" | "Low";
 export type TaskStatus = "Open" | "Completed";
 
 export type TimelineEventType =
@@ -87,7 +92,6 @@ export interface Task {
   description: string | null;
   assignedTo: Specialist;
   dueDate: string | null; // ISO date string
-  priority: TaskPriority;
   status: TaskStatus;
   createdAt: string;
   completedAt: string | null;

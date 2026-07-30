@@ -17,7 +17,7 @@ export default function PeoplePage() {
       <Nav active="people" />
       <Container maxWidth="lg" sx={{ py: 4 }}>
         {/* Team */}
-        <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>Team</Typography>
+        <Typography variant="h5" sx={{ fontWeight: 500, mb: 3 }}>Team</Typography>
         <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", lg: "1fr 1fr 1fr" }, gap: 2, mb: 6 }}>
           {specialists.map((sp) => (
             <Card key={sp.id} variant="outlined">
@@ -25,7 +25,7 @@ export default function PeoplePage() {
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
                   <Avatar sx={{ width: 40, height: 40, fontSize: "0.8rem", bgcolor: sp.avatarColor }}>{getInitials(sp.name)}</Avatar>
                   <Box>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{sp.name}</Typography>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>{sp.name}</Typography>
                     <Typography variant="caption" color="text.secondary">Specialist</Typography>
                   </Box>
                 </Box>
@@ -41,7 +41,7 @@ export default function PeoplePage() {
         </Box>
 
         {/* Lender Contacts */}
-        <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>Lender Contacts</Typography>
+        <Typography variant="h5" sx={{ fontWeight: 500, mb: 3 }}>Lender Contacts</Typography>
         <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", lg: "1fr 1fr 1fr" }, gap: 2 }}>
           {contacts.map((contact) => {
             const lender = lenders.find((l) => l.id === contact.lenderId);
@@ -53,7 +53,7 @@ export default function PeoplePage() {
                       <Users size={18} />
                     </Avatar>
                     <Box>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{contact.department}</Typography>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>{contact.department}</Typography>
                       {contact.name ? (
                         <Typography variant="caption" color="text.secondary">{contact.name}</Typography>
                       ) : (

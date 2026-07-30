@@ -82,7 +82,7 @@ export function TaskList({ tasks, fileMap, currentSpecialistId }: { tasks: Task[
             size="small"
             clickable
             onClick={() => { setScope("mine"); setFilter("overdue"); }}
-            sx={{ fontWeight: 600 }}
+            sx={{ fontWeight: 500 }}
           />
         )}
       </Box>
@@ -96,7 +96,6 @@ export function TaskList({ tasks, fileMap, currentSpecialistId }: { tasks: Task[
           {filtered.map((task, index) => {
             const file = fileMap.get(task.fileId);
             const overdue = task.dueDate && isOverdue(task.dueDate) && !isToday(task.dueDate);
-            const priorityColor = task.priority === "High" ? "error" : task.priority === "Medium" ? "warning" : "default";
 
             return (
               <Link key={task.id} href={`/files/${task.fileId}`} style={{ textDecoration: "none" }}>
@@ -114,7 +113,6 @@ export function TaskList({ tasks, fileMap, currentSpecialistId }: { tasks: Task[
                       </Typography>
                     )}
                     <Box sx={{ display: "flex", gap: 1.5, mt: 0.75, alignItems: "center" }}>
-                      <Chip label={task.priority} size="small" color={priorityColor as "error" | "warning" | "default"} variant="outlined" sx={{ height: 20, fontSize: "0.7rem" }} />
                       {task.dueDate && (
                         <Typography variant="caption" color={overdue ? "error" : "text.secondary"} sx={{ fontWeight: overdue ? 600 : 400 }}>
                           {overdue ? `Overdue · ${formatRelative(task.dueDate)}` : formatRelative(task.dueDate)}

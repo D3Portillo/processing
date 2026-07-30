@@ -14,7 +14,7 @@ export default function SalesPage() {
       <Nav active="sales" />
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h5" sx={{ fontWeight: 700 }}>Upcoming Sale Dates (14 days)</Typography>
+          <Typography variant="h5" sx={{ fontWeight: 500 }}>Upcoming Sale Dates (14 days)</Typography>
         </Box>
         {data.upcomingSaleDates.length === 0 ? (
           <Card variant="outlined"><CardContent><Typography color="text.secondary" sx={{ textAlign: "center", py: 4 }}>No upcoming sale dates</Typography></CardContent></Card>
