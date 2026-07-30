@@ -1,16 +1,16 @@
+"use client";
+
 import { Container, Box } from "@mui/material";
-import { getDashboardData, getAllFiles } from "@/app/lib/mock-data";
+import { getDashboardData, getAllFiles, useStore } from "@/app/lib/mock-data";
 import { Nav } from "@/app/components/Nav";
 import { TaskList } from "@/app/components/TaskList";
 
-export const dynamic = "force-dynamic";
-
-export default async function DashboardPage() {
+export default function DashboardPage() {
+  useStore();
   const data = getDashboardData();
   const allFiles = getAllFiles();
   const fileMap = new Map(allFiles.map((f) => [f.id, f]));
 
-  // TODO: replace with actual auth context
   const currentSpecialistId = "sp-1";
 
   return (

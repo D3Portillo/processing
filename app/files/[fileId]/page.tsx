@@ -1,8 +1,10 @@
+"use client";
+
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { useParams, notFound } from "next/navigation";
 import { Container, Box, Typography, Card, CardContent, Avatar, Divider, Stack, Table, TableBody, TableCell, TableHead, TableRow } from "@mui/material";
 import { Phone, Mail, MapPin, FileText, Clock, User } from "lucide-react";
-import { getFileById, getAllSpecialists, getAllLenders, getAllLenderContacts } from "@/app/lib/mock-data";
+import { getFileById, getAllSpecialists, getAllLenders, getAllLenderContacts, useStore } from "@/app/lib/mock-data";
 import { Nav } from "@/app/components/Nav";
 import { FileMenu } from "@/app/components/FileMenu";
 import { AssignSelector } from "@/app/components/AssignSelector";
@@ -16,21 +18,20 @@ import { CompleteTaskButton } from "@/app/components/CompleteTaskButton";
 import { formatDate, formatDateTime, formatRelative, getInitials, isOverdue } from "@/app/lib/utils";
 import type { DocumentRecord } from "@/app/lib/types";
 
-export const dynamic = "force-dynamic";
-
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export default async function FileDetailPage({ params }: { params: Promise<{ fileId: string }> }) {
-  const { fileId } = await params;
+export default function FileDetailPage() {
+  useStore();
+  const params = useParams();
+  const fileId = params.fileId as string;
   const file = getFileById(fileId);
   if (!file) notFound();
 
   const specialists = getAllSpecialists();
-  const lenders = getAllLenders();
   const allPocs = getAllLenderContacts();
   const actorId = file.specialist?.id ?? specialists[0]?.id ?? "";
   const openTasks = file.tasks.filter((t) => t.status === "Open");
@@ -38,15 +39,13 @@ export default async function FileDetailPage({ params }: { params: Promise<{ fil
 
   return (
     <Box>
-      {/* Top Nav */}
       <Nav active="tasks" />
 
-      {/* File sub-header */}
       <Box sx={{ borderBottom: 1, borderColor: "divider", bgcolor: "background.paper" }}>
         <Container maxWidth="lg" sx={{ py: 2 }}>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2 }}>
             <Box sx={{ minWidth: 0 }}>
-              <Typography variant="h6" noWrap sx={{ fontWeight: 700 }}>{file.borrower.name}</Typography>
+              <Typography variant="h6" sx={{ fontWeight: 700 }} noWrap>{file.borrower.name}</Typography>
             </Box>
             <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", flexShrink: 0 }}>
               <StageBadge stage={file.stage} />
@@ -60,7 +59,6 @@ export default async function FileDetailPage({ params }: { params: Promise<{ fil
       </Box>
 
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        {/* Info cards */}
         <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2, mb: 4 }}>
           {/* Borrower */}
           <Card variant="outlined" sx={{ display: "flex", flexDirection: "column" }}>
@@ -69,7 +67,7 @@ export default async function FileDetailPage({ params }: { params: Promise<{ fil
                 <User size={16} />
                 <Typography variant="overline" color="text.secondary">Borrower</Typography>
               </Box>
-              <Typography variant="subtitle1"  sx={{ mt: 1, fontWeight: 600}}>{file.borrower.name}</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, mt: 1 }}>{file.borrower.name}</Typography>
               <Stack spacing={1} sx={{ mt: 1.5 }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}><Phone size={14} /><Typography variant="body2" color="text.secondary">{file.borrower.phone}</Typography></Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}><Mail size={14} /><Typography variant="body2" color="text.secondary">{file.borrower.email}</Typography></Box>
@@ -139,7 +137,7 @@ export default async function FileDetailPage({ params }: { params: Promise<{ fil
                           <Box key={task.id} sx={{ display: "flex", alignItems: "flex-start", gap: 1, p: 1.5, borderRadius: 1 }}>
                             <CompleteTaskButton task={task} actorId={actorId} />
                             <Box sx={{ flex: 1, minWidth: 0 }}>
-                              <Typography variant="body2"  sx={{ textDecoration: "line-through", color: "text.secondary", fontWeight: 500}}>{task.title}</Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 500, textDecoration: "line-through", color: "text.secondary" }}>{task.title}</Typography>
                               {task.completedAt && <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>Completed {formatRelative(task.completedAt)}</Typography>}
                             </Box>
                           </Box>

@@ -1,18 +1,17 @@
 "use client";
 
-import { useTransition, useState } from "react";
+import { useState } from "react";
 import { Button, Menu, MenuItem, ListItemIcon, ListItemText } from "@mui/material";
 import { ChevronDown, ArrowRight } from "lucide-react";
-import { updateStageAction } from "@/app/lib/actions";
+import { updateFileStage, useStore } from "@/app/lib/mock-data";
 import type { Stage } from "@/app/lib/types";
 import { STAGES } from "@/app/lib/types";
 
 export function StageSelector({ fileId, currentStage, actorId }: { fileId: string; currentStage: Stage; actorId: string }) {
-  const [transitioning, startTransition] = useTransition();
+  useStore();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const open = Boolean(anchorEl);
 
-  // Only show stages after the current one as "next" options
   const currentIndex = STAGES.indexOf(currentStage);
   const nextStages = STAGES.filter((_, i) => i > currentIndex);
 
@@ -22,7 +21,6 @@ export function StageSelector({ fileId, currentStage, actorId }: { fileId: strin
         size="small"
         endIcon={<ChevronDown size={16} />}
         onClick={(e) => setAnchorEl(e.currentTarget)}
-        disabled={transitioning}
         sx={{
           textTransform: "none",
           fontWeight: 600,
@@ -47,7 +45,7 @@ export function StageSelector({ fileId, currentStage, actorId }: { fileId: strin
               key={stage}
               onClick={() => {
                 setAnchorEl(null);
-                startTransition(async () => { await updateStageAction(fileId, stage, actorId); });
+                updateFileStage(fileId, stage, actorId);
               }}
             >
               <ListItemIcon sx={{ minWidth: 32, color: "text.secondary" }}>

@@ -1,12 +1,13 @@
+"use client";
+
 import { Container, Typography, Box, Card, CardContent, Stack, Avatar } from "@mui/material";
 import { Phone, Mail, Building, Users } from "lucide-react";
-import { getAllSpecialists, getAllLenders, getAllLenderContacts } from "@/app/lib/mock-data";
+import { getAllSpecialists, getAllLenders, getAllLenderContacts, useStore } from "@/app/lib/mock-data";
 import { Nav } from "@/app/components/Nav";
 import { getInitials } from "@/app/lib/utils";
 
-export const dynamic = "force-dynamic";
-
-export default async function PeoplePage() {
+export default function PeoplePage() {
+  useStore();
   const specialists = getAllSpecialists();
   const lenders = getAllLenders();
   const contacts = getAllLenderContacts();
@@ -16,7 +17,7 @@ export default async function PeoplePage() {
       <Nav active="people" />
       <Container maxWidth="lg" sx={{ py: 4 }}>
         {/* Team */}
-        <Typography variant="h5"  sx={{ mb: 3, fontWeight: 700}}>Team</Typography>
+        <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>Team</Typography>
         <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", lg: "1fr 1fr 1fr" }, gap: 2, mb: 6 }}>
           {specialists.map((sp) => (
             <Card key={sp.id} variant="outlined">
@@ -40,7 +41,7 @@ export default async function PeoplePage() {
         </Box>
 
         {/* Lender Contacts */}
-        <Typography variant="h5"  sx={{ mb: 3, fontWeight: 700}}>Lender Contacts</Typography>
+        <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>Lender Contacts</Typography>
         <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", lg: "1fr 1fr 1fr" }, gap: 2 }}>
           {contacts.map((contact) => {
             const lender = lenders.find((l) => l.id === contact.lenderId);

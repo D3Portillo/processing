@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import {
   Button, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, MenuItem, FormControl, InputLabel, Select,
@@ -8,12 +8,12 @@ import {
 } from "@mui/material";
 import { Plus, Phone } from "lucide-react";
 import type { Specialist, TaskPriority } from "@/app/lib/types";
-import { createTaskAction } from "@/app/lib/actions";
+import { createTask, useStore } from "@/app/lib/mock-data";
 
 export function AddTaskDialog({ fileId, specialists, actorId }: { fileId: string; specialists: Specialist[]; actorId: string }) {
+  useStore();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [open, setOpen] = useState(false);
-  const [transitioning, startTransition] = useTransition();
   const [title, setTitle] = useState("");
   const [assignTo, setAssignTo] = useState(specialists[0]?.id ?? "");
   const [dueDate, setDueDate] = useState("");
@@ -35,15 +35,13 @@ export function AddTaskDialog({ fileId, specialists, actorId }: { fileId: string
 
   function handleSubmit() {
     if (!title.trim()) return;
-    startTransition(async () => {
-      await createTaskAction({
-        fileId, title: title.trim(), description: description.trim() || undefined,
-        assignedToId: assignTo, dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
-        priority, actorId,
-      });
-      setTitle(""); setDescription(""); setDueDate(""); setPriority("Medium");
-      setOpen(false);
+    createTask({
+      fileId, title: title.trim(), description: description.trim() || undefined,
+      assignedToId: assignTo, dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
+      priority, actorId,
     });
+    setTitle(""); setDescription(""); setDueDate(""); setPriority("Medium");
+    setOpen(false);
   }
 
   return (
@@ -93,8 +91,8 @@ export function AddTaskDialog({ fileId, specialists, actorId }: { fileId: string
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSubmit} disabled={transitioning || !title.trim()}>
-            {transitioning ? "Creating..." : "Create Task"}
+          <Button variant="contained" onClick={handleSubmit} disabled={!title.trim()}>
+            Create Task
           </Button>
         </DialogActions>
       </Dialog>

@@ -1,22 +1,20 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { Button, TextField, Stack } from "@mui/material";
 import { Plus } from "lucide-react";
-import { addNoteAction } from "@/app/lib/actions";
+import { addNote, useStore } from "@/app/lib/mock-data";
 
 export function AddNoteForm({ fileId, authorId }: { fileId: string; authorId: string }) {
-  const [transitioning, startTransition] = useTransition();
+  useStore();
   const [body, setBody] = useState("");
   const [expanded, setExpanded] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!body.trim()) return;
-    startTransition(async () => {
-      await addNoteAction({ fileId, authorId, body: body.trim() });
-      setBody(""); setExpanded(false);
-    });
+    addNote({ fileId, authorId, body: body.trim() });
+    setBody(""); setExpanded(false);
   }
 
   if (!expanded) {
@@ -30,8 +28,8 @@ export function AddNoteForm({ fileId, authorId }: { fileId: string; authorId: st
           placeholder="Enter your note..." autoFocus />
         <Stack direction="row" spacing={1} sx={{ justifyContent: "flex-end" }}>
           <Button variant="outlined" size="small" onClick={() => { setExpanded(false); setBody(""); }}>Cancel</Button>
-          <Button type="submit" variant="contained" size="small" disabled={transitioning || !body.trim()}>
-            {transitioning ? "Saving..." : "Save Note"}
+          <Button type="submit" variant="contained" size="small" disabled={!body.trim()}>
+            Save Note
           </Button>
         </Stack>
       </Stack>

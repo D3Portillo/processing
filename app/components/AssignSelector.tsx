@@ -1,26 +1,24 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Box, Avatar, Select, MenuItem, FormControl, Typography } from "@mui/material";
 import { getInitials } from "@/app/lib/utils";
-import { assignFileAction } from "@/app/lib/actions";
+import { assignFile, useStore } from "@/app/lib/mock-data";
 import type { Specialist } from "@/app/lib/types";
 
 const UNASSIGNED_ID = "__unassigned__";
 
 export function AssignSelector({ fileId, current, specialists, actorId }: { fileId: string; current: Specialist | null; specialists: Specialist[]; actorId: string }) {
-  const router = useRouter();
+  useStore();
   const [value, setValue] = useState(current?.id ?? UNASSIGNED_ID);
 
   useEffect(() => { setValue(current?.id ?? UNASSIGNED_ID); }, [current?.id]);
 
-  const handleChange = async (e: any) => {
+  const handleChange = (e: any) => {
     const selectedId = e.target.value as string;
     setValue(selectedId);
     const specialistId = selectedId === UNASSIGNED_ID ? null : selectedId;
-    await assignFileAction(fileId, specialistId, actorId);
-    router.refresh();
+    assignFile(fileId, specialistId, actorId);
   };
 
   return (

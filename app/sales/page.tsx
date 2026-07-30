@@ -1,11 +1,12 @@
+"use client";
+
 import { Container, Typography, Box, Card, CardContent } from "@mui/material";
-import { getDashboardData } from "@/app/lib/mock-data";
+import { getDashboardData, useStore } from "@/app/lib/mock-data";
 import { Nav } from "@/app/components/Nav";
 import { SaleDateCard } from "@/app/components/FileCard";
 
-export const dynamic = "force-dynamic";
-
-export default async function SalesPage() {
+export default function SalesPage() {
+  useStore();
   const data = getDashboardData();
 
   return (
