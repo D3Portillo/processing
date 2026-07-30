@@ -7,6 +7,8 @@ import type {
   DocumentRecord,
   DashboardData,
   Specialist,
+  Lender,
+  LenderPOC,
   Stage,
   TaskPriority,
 } from "./types";
@@ -45,4 +47,10 @@ export interface MortgageFileRepository {
 
   // Specialists
   getAllSpecialists(): Promise<Specialist[]>;
+
+  // Lenders
+  getAllLenders(): Promise<Lender[]>;
+
+  // Lender POCs
+  getAllPocs(): Promise<LenderPOC[]>;
 }

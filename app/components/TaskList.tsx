@@ -14,6 +14,8 @@ const FILTER_OPTIONS: { value: TaskFilter; label: string }[] = [
   { value: "all", label: "All Tasks" },
 ];
 
+type ScopeOption = "mine" | "all";
+
 function filterTasks(tasks: Task[], filter: TaskFilter): Task[] {
   switch (filter) {
     case "overdue": return tasks.filter((t) => t.dueDate && isOverdue(t.dueDate) && !isToday(t.dueDate));
@@ -26,33 +28,64 @@ function filterTasks(tasks: Task[], filter: TaskFilter): Task[] {
   }
 }
 
-export function TaskList({ tasks, fileMap }: { tasks: Task[]; fileMap: Map<string, MortgageFile> }) {
+export function TaskList({ tasks, fileMap, currentSpecialistId }: { tasks: Task[]; fileMap: Map<string, MortgageFile>; currentSpecialistId: string }) {
   const [filter, setFilter] = useState<TaskFilter>("today");
+  const [scope, setScope] = useState<ScopeOption>("mine");
 
-  const filtered = useMemo(() => filterTasks(tasks, filter), [tasks, filter]);
+  const scoped = useMemo(() => {
+    if (scope === "mine") return tasks.filter((t) => t.assignedTo.id === currentSpecialistId);
+    return tasks;
+  }, [tasks, scope]);
+
+  const filtered = useMemo(() => filterTasks(scoped, filter), [scoped, filter]);
+
+  const myTasks = useMemo(() => tasks.filter((t) => t.assignedTo.id === currentSpecialistId), [tasks, currentSpecialistId]);
+  const myOverdueCount = useMemo(() => myTasks.filter((t) => t.dueDate && isOverdue(t.dueDate) && !isToday(t.dueDate)).length, [myTasks]);
+
   const counts = useMemo(() => {
-    const c: Record<string, number> = { all: tasks.length };
-    c.overdue = tasks.filter((t) => t.dueDate && isOverdue(t.dueDate) && !isToday(t.dueDate)).length;
-    c.today = tasks.filter((t) => t.dueDate && isToday(t.dueDate)).length;
-    c.tomorrow = tasks.filter((t) => t.dueDate && isTomorrow(t.dueDate)).length;
-    c.upcoming = tasks.filter((t) => t.dueDate && !isOverdue(t.dueDate) && !isToday(t.dueDate) && !isTomorrow(t.dueDate)).length;
+    const c: Record<string, number> = { all: scoped.length };
+    c.overdue = scoped.filter((t) => t.dueDate && isOverdue(t.dueDate) && !isToday(t.dueDate)).length;
+    c.today = scoped.filter((t) => t.dueDate && isToday(t.dueDate)).length;
+    c.tomorrow = scoped.filter((t) => t.dueDate && isTomorrow(t.dueDate)).length;
+    c.upcoming = scoped.filter((t) => t.dueDate && !isOverdue(t.dueDate) && !isToday(t.dueDate) && !isTomorrow(t.dueDate)).length;
     return c;
-  }, [tasks]);
+  }, [scoped]);
 
   return (
     <Box>
-      <FormControl size="small" sx={{ minWidth: 200, mb: 2 }}>
-        <Select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value as TaskFilter)}
-        >
-          {FILTER_OPTIONS.map((opt) => (
-            <MenuItem key={opt.value} value={opt.value}>
-              {opt.label} ({counts[opt.value] || 0})
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+      <Box sx={{ display: "flex", gap: 2, mb: 2, alignItems: "center" }}>
+        <FormControl size="small" sx={{ minWidth: 170 }}>
+          <Select
+            value={scope}
+            onChange={(e) => setScope(e.target.value as ScopeOption)}
+          >
+            <MenuItem value="mine">Assigned to Me</MenuItem>
+            <MenuItem value="all">All Tasks</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: 200 }}>
+          <Select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value as TaskFilter)}
+          >
+            {FILTER_OPTIONS.map((opt) => (
+              <MenuItem key={opt.value} value={opt.value}>
+                {opt.label} ({counts[opt.value] || 0})
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        {myOverdueCount > 0 && (
+          <Chip
+            label={`${myOverdueCount} overdue`}
+            color="error"
+            size="small"
+            clickable
+            onClick={() => { setScope("mine"); setFilter("overdue"); }}
+            sx={{ fontWeight: 600 }}
+          />
+        )}
+      </Box>
 
       {filtered.length === 0 ? (
         <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center", py: 4 }}>
@@ -71,6 +104,7 @@ export function TaskList({ tasks, fileMap }: { tasks: Task[]; fileMap: Map<strin
                   display: "flex", alignItems: "flex-start", gap: 1.5, p: 1.5, borderRadius: 1,
                   cursor: "pointer",
                   bgcolor: index % 2 === 0 ? "rgba(0,0,0,0.025)" : "transparent",
+                  "&:hover": { bgcolor: "rgba(0,0,0,0.05)" },
                 }}>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Typography variant="body2" fontWeight={500}>{task.title}</Typography>

@@ -16,6 +16,16 @@ export const lenders = sqliteTable("lenders", {
   email: text("email").notNull(),
 });
 
+// ─── Lender POCs ─────────────────────────────────────────────
+export const lenderPocs = sqliteTable("lender_pocs", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  title: text("title").notNull(),
+  phone: text("phone").notNull(),
+  email: text("email").notNull(),
+  lenderId: text("lender_id").notNull().references(() => lenders.id),
+});
+
 // ─── Borrowers ───────────────────────────────────────────────
 export const borrowers = sqliteTable("borrowers", {
   id: text("id").primaryKey(),
@@ -24,6 +34,7 @@ export const borrowers = sqliteTable("borrowers", {
   email: text("email").notNull(),
   propertyAddress: text("property_address").notNull(),
   loanNumber: text("loan_number").notNull(),
+  monthlyPayment: integer("monthly_payment").notNull(),
 });
 
 // ─── Mortgage Files ──────────────────────────────────────────
@@ -32,8 +43,9 @@ export const mortgageFiles = sqliteTable("mortgage_files", {
   borrowerId: text("borrower_id").notNull().references(() => borrowers.id),
   specialistId: text("specialist_id").notNull().references(() => specialists.id),
   lenderId: text("lender_id").notNull().references(() => lenders.id),
+  pocId: text("poc_id"),
   stage: text("stage").notNull(),
-  saleDate: text("sale_date"), // ISO date or null
+  saleDate: text("sale_date"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });

@@ -27,6 +27,10 @@ const LENDERS = [
   { id: "ln-10", name: "LoanDepot", phone: "1-888-555-0177", email: "lossmit@loandepot.com" },
 ];
 
+const POC_TITLES = ["Loss Mitigation Specialist", "Home Retention Officer", "Loan Servicing Manager", "Modification Specialist", "Collections Supervisor"];
+const POC_FIRST_NAMES = ["Maria", "James", "Patricia", "Robert", "Susan", "Michael", "Linda", "David", "Karen", "Daniel", "Nancy", "Christopher", "Lisa", "Anthony", "Sandra"];
+const POC_LAST_NAMES = ["Torres", "Johnson", "Garcia", "Martinez", "Williams", "Brown", "Davis", "Miller", "Wilson", "Anderson", "Thomas", "Lee", "Harris", "Clark", "Lewis"];
+
 const BORROWER_FIRST_NAMES = [
   "James", "Mary", "Robert", "Patricia", "John", "Jennifer", "Michael", "Linda",
   "William", "Elizabeth", "David", "Barbara", "Richard", "Susan", "Joseph",
@@ -199,6 +203,7 @@ export async function seedDatabase() {
   await client.execute("DROP TABLE IF EXISTS tasks");
   await client.execute("DROP TABLE IF EXISTS mortgage_files");
   await client.execute("DROP TABLE IF EXISTS borrowers");
+  await client.execute("DROP TABLE IF EXISTS lender_pocs");
   await client.execute("DROP TABLE IF EXISTS lenders");
   await client.execute("DROP TABLE IF EXISTS specialists");
 
@@ -220,13 +225,24 @@ export async function seedDatabase() {
     )
   `);
   await client.execute(`
+    CREATE TABLE lender_pocs (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      title TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      email TEXT NOT NULL,
+      lender_id TEXT NOT NULL REFERENCES lenders(id)
+    )
+  `);
+  await client.execute(`
     CREATE TABLE borrowers (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       phone TEXT NOT NULL,
       email TEXT NOT NULL,
       property_address TEXT NOT NULL,
-      loan_number TEXT NOT NULL
+      loan_number TEXT NOT NULL,
+      monthly_payment INTEGER NOT NULL
     )
   `);
   await client.execute(`
@@ -235,6 +251,7 @@ export async function seedDatabase() {
       borrower_id TEXT NOT NULL REFERENCES borrowers(id),
       specialist_id TEXT NOT NULL REFERENCES specialists(id),
       lender_id TEXT NOT NULL REFERENCES lenders(id),
+      poc_id TEXT,
       stage TEXT NOT NULL,
       sale_date TEXT,
       created_at TEXT NOT NULL,
@@ -299,6 +316,26 @@ export async function seedDatabase() {
     await db.insert(schema.lenders).values(ln);
   }
 
+  // Insert POCs — 2-3 per lender
+  let pocCounter = 0;
+  const pocMap: Record<string, string> = {}; // lenderId -> first pocId
+  for (const ln of LENDERS) {
+    const pocCount = randomInt(2, 3, rand);
+    for (let p = 0; p < pocCount; p++) {
+      const pocId = `poc-${++pocCounter}`;
+      const pocName = `${pick(POC_FIRST_NAMES, rand)} ${pick(POC_LAST_NAMES, rand)}`;
+      if (!pocMap[ln.id]) pocMap[ln.id] = pocId;
+      await db.insert(schema.lenderPocs).values({
+        id: pocId,
+        name: pocName,
+        title: pick(POC_TITLES, rand),
+        phone: genPhone(rand),
+        email: `${pocName.toLowerCase().replace(" ", ".")}@${ln.email.split("@")[1]}`,
+        lenderId: ln.id,
+      });
+    }
+  }
+
   // Generate 50 mortgage files
   const FILE_COUNT = 50;
   for (let i = 0; i < FILE_COUNT; i++) {
@@ -335,14 +372,17 @@ export async function seedDatabase() {
       email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@email.com`,
       propertyAddress: `${street}, ${city.city}, ${city.state} ${randomInt(90000, 92899, rand)}`,
       loanNumber: genLoanNumber(rand),
+      monthlyPayment: randomInt(1200, 4500, rand),
     });
 
     // Insert mortgage file
+    const filePocId = pocMap[lender.id] ?? null;
     await db.insert(schema.mortgageFiles).values({
       id: fileId,
       borrowerId,
       specialistId: specialist.id,
       lenderId: lender.id,
+      pocId: filePocId,
       stage,
       saleDate,
       createdAt,

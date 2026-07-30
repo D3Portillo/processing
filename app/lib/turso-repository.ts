@@ -12,6 +12,8 @@ import type {
   DocumentRecord,
   DashboardData,
   Specialist,
+  Lender,
+  LenderPOC,
   Stage,
   TaskPriority,
 } from "./types";
@@ -65,6 +67,7 @@ export class TursoRepository implements MortgageFileRepository {
         email: borrower.email,
         propertyAddress: borrower.propertyAddress,
         loanNumber: borrower.loanNumber,
+        monthlyPayment: borrower.monthlyPayment,
       },
       specialist: this.mapSpecialist(specialist),
       lender: {
@@ -74,6 +77,7 @@ export class TursoRepository implements MortgageFileRepository {
         email: lender.email,
       },
       stage: file.stage as MortgageFile["stage"],
+      poc: null,
       saleDate: file.saleDate,
       createdAt: file.createdAt,
       updatedAt: file.updatedAt,
@@ -454,5 +458,31 @@ export class TursoRepository implements MortgageFileRepository {
   async getAllSpecialists(): Promise<Specialist[]> {
     const rows = await this.db.select().from(schema.specialists).orderBy(asc(schema.specialists.name));
     return rows.map(this.mapSpecialist);
+  }
+
+  // ── Lenders ──────────────────────────────────────────────
+
+  async getAllLenders(): Promise<Lender[]> {
+    const rows = await this.db.select().from(schema.lenders).orderBy(asc(schema.lenders.name));
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      phone: row.phone,
+      email: row.email,
+    }));
+  }
+
+  // ── Lender POCs ──────────────────────────────────────────
+
+  async getAllPocs(): Promise<LenderPOC[]> {
+    const rows = await this.db.select().from(schema.lenderPocs).orderBy(asc(schema.lenderPocs.name));
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      title: row.title,
+      phone: row.phone,
+      email: row.email,
+      lenderId: row.lenderId,
+    }));
   }
 }

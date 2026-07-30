@@ -49,6 +49,15 @@ export interface Lender {
   email: string;
 }
 
+export interface LenderPOC {
+  id: string;
+  name: string;
+  title: string;
+  phone: string;
+  email: string;
+  lenderId: string;
+}
+
 export interface Borrower {
   id: string;
   name: string;
@@ -56,6 +65,7 @@ export interface Borrower {
   email: string;
   propertyAddress: string;
   loanNumber: string;
+  monthlyPayment: number;
 }
 
 export interface MortgageFile {
@@ -63,8 +73,9 @@ export interface MortgageFile {
   borrower: Borrower;
   specialist: Specialist;
   lender: Lender;
+  poc: LenderPOC | null;
   stage: Stage;
-  saleDate: string | null; // ISO date string
+  saleDate: string | null;
   createdAt: string;
   updatedAt: string;
 }

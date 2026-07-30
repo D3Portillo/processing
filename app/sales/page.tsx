@@ -15,7 +15,6 @@ export default async function SalesPage() {
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Box sx={{ mb: 4 }}>
           <Typography variant="h5" fontWeight={700}>Upcoming Sale Dates</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>Next 30 days</Typography>
         </Box>
         {data.upcomingSaleDates.length === 0 ? (
           <Card variant="outlined"><CardContent><Typography color="text.secondary" sx={{ textAlign: "center", py: 4 }}>No upcoming sale dates</Typography></CardContent></Card>

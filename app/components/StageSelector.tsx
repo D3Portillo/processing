@@ -1,27 +1,63 @@
 "use client";
 
-import { useTransition } from "react";
-import { FormControl, Select, MenuItem } from "@mui/material";
+import { useTransition, useState } from "react";
+import { Button, Menu, MenuItem, ListItemIcon, ListItemText } from "@mui/material";
+import { ChevronDown, ArrowRight } from "lucide-react";
 import { updateStageAction } from "@/app/lib/actions";
 import type { Stage } from "@/app/lib/types";
 import { STAGES } from "@/app/lib/types";
 
 export function StageSelector({ fileId, currentStage, actorId }: { fileId: string; currentStage: Stage; actorId: string }) {
   const [transitioning, startTransition] = useTransition();
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const open = Boolean(anchorEl);
+
+  // Only show stages after the current one as "next" options
+  const currentIndex = STAGES.indexOf(currentStage);
+  const nextStages = STAGES.filter((_, i) => i > currentIndex);
 
   return (
-    <FormControl size="small" sx={{ minWidth: 160 }}>
-      <Select
-        value={currentStage}
+    <>
+      <Button
+        size="small"
+        endIcon={<ChevronDown size={16} />}
+        onClick={(e) => setAnchorEl(e.currentTarget)}
         disabled={transitioning}
-        onChange={(e) => {
-          const stage = e.target.value as Stage;
-          if (stage === currentStage) return;
-          startTransition(async () => { await updateStageAction(fileId, stage, actorId); });
+        sx={{
+          textTransform: "none",
+          fontWeight: 600,
+          color: "text.primary",
+          border: 1,
+          borderColor: "divider",
+          borderRadius: 1,
+          px: 1.5,
+          "&:hover": { bgcolor: "action.hover" },
         }}
       >
-        {STAGES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-      </Select>
-    </FormControl>
+        Change Status
+      </Button>
+      <Menu anchorEl={anchorEl} open={open} onClose={() => setAnchorEl(null)}>
+        {nextStages.length === 0 ? (
+          <MenuItem disabled>
+            <ListItemText>No further stages</ListItemText>
+          </MenuItem>
+        ) : (
+          nextStages.map((stage) => (
+            <MenuItem
+              key={stage}
+              onClick={() => {
+                setAnchorEl(null);
+                startTransition(async () => { await updateStageAction(fileId, stage, actorId); });
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 32, color: "text.secondary" }}>
+                <ArrowRight size={16} />
+              </ListItemIcon>
+              <ListItemText primary={stage} />
+            </MenuItem>
+          ))
+        )}
+      </Menu>
+    </>
   );
 }

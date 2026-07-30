@@ -3,13 +3,15 @@
 import { useState, useTransition } from "react";
 import {
   Button, Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, MenuItem, FormControl, InputLabel, Select, Stack,
+  TextField, MenuItem, FormControl, InputLabel, Select,
+  Menu, ListItemIcon, ListItemText, Stack,
 } from "@mui/material";
-import { Plus } from "lucide-react";
+import { Plus, Phone } from "lucide-react";
 import type { Specialist, TaskPriority } from "@/app/lib/types";
 import { createTaskAction } from "@/app/lib/actions";
 
 export function AddTaskDialog({ fileId, specialists, actorId }: { fileId: string; specialists: Specialist[]; actorId: string }) {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [open, setOpen] = useState(false);
   const [transitioning, startTransition] = useTransition();
   const [title, setTitle] = useState("");
@@ -17,6 +19,19 @@ export function AddTaskDialog({ fileId, specialists, actorId }: { fileId: string
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState<TaskPriority>("Medium");
   const [description, setDescription] = useState("");
+
+  function openBlank() {
+    setTitle(""); setPriority("Medium"); setDescription(""); setDueDate("");
+    setOpen(true);
+    setAnchorEl(null);
+  }
+
+  function openFollowUp() {
+    setTitle("Follow up");
+    setPriority("High");
+    setOpen(true);
+    setAnchorEl(null);
+  }
 
   function handleSubmit() {
     if (!title.trim()) return;
@@ -33,9 +48,24 @@ export function AddTaskDialog({ fileId, specialists, actorId }: { fileId: string
 
   return (
     <>
-      <Button variant="outlined" size="small" startIcon={<Plus size={16} />} onClick={() => setOpen(true)}>
+      <Button
+        variant="outlined"
+        size="small"
+        startIcon={<Plus size={16} />}
+        onClick={(e) => setAnchorEl(e.currentTarget)}
+      >
         Add Task
       </Button>
+      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
+        <MenuItem onClick={openFollowUp}>
+          <ListItemIcon><Phone size={16} /></ListItemIcon>
+          <ListItemText>Follow up</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={openBlank}>
+          <ListItemIcon><Plus size={16} /></ListItemIcon>
+          <ListItemText>Create Task</ListItemText>
+        </MenuItem>
+      </Menu>
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>New Task</DialogTitle>
         <DialogContent>
@@ -49,7 +79,7 @@ export function AddTaskDialog({ fileId, specialists, actorId }: { fileId: string
               </Select>
             </FormControl>
             <TextField label="Due Date" type="date" fullWidth value={dueDate} onChange={(e) => setDueDate(e.target.value)}
-              InputLabelProps={{ shrink: true }} />
+              slotProps={{ inputLabel: { shrink: true } }} />
             <FormControl fullWidth>
               <InputLabel>Priority</InputLabel>
               <Select value={priority} label="Priority" onChange={(e) => setPriority(e.target.value as TaskPriority)}>
