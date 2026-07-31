@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Avatar, Menu, MenuItem } from "@mui/material"
+import { Avatar, Box, Menu, MenuItem, Typography } from "@mui/material"
 import { useRouter } from "next/navigation"
 import { colorFromString, getInitials } from "@/app/lib/utils"
 import type { GoogleIdentity } from "@/app/lib/google-auth"
@@ -37,6 +37,14 @@ export function ProfileMenu({ user }: { user: GoogleIdentity }) {
         open={Boolean(anchorEl)}
         onClose={() => setAnchorEl(null)}
       >
+        <Box sx={{ px: 2, py: 1.25, minWidth: 220 }}>
+          <Typography variant="body2" sx={{ fontWeight: 600 }} noWrap>
+            {user.name}
+          </Typography>
+          <Typography variant="caption" color="text.secondary" noWrap>
+            {user.email}
+          </Typography>
+        </Box>
         <MenuItem onClick={disconnect}>Disconnect</MenuItem>
       </Menu>
     </>

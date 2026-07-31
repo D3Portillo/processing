@@ -28,11 +28,15 @@ import { AddTaskDialog } from "@/app/components/AddTaskDialog"
 import { AssignSelector } from "@/app/components/AssignSelector"
 import { SALESFORCE_OWNERS } from "@/app/lib/sf-leads"
 import { colorFromString, formatDate, formatRelative } from "@/app/lib/utils"
+import { GeneratedTaskCheckbox } from "@/app/components/GeneratedTaskCheckbox"
+import { useAtomValue } from "jotai"
+import { isTaskCompleted, taskCompletionsAtom } from "@/app/lib/task-state"
 
 export function LiveFileDetail() {
   const params = useParams<{ fileId: string }>()
   const { data: leads, error, isLoading } = useLeads()
   const { data: connectedUser } = useSalesforceUser()
+  const completions = useAtomValue(taskCompletionsAtom)
 
   if (isLoading) {
     return (
@@ -67,7 +71,9 @@ export function LiveFileDetail() {
   )
   const actorId = actor?.id ?? file.specialist?.id ?? specialists[0]?.id ?? ""
   const generatedTasks = deriveLeadTasks(lead, file.specialist ?? specialists[0])
-  const openTasks = generatedTasks.filter((task) => task.status === "Open")
+  const openTasks = generatedTasks.filter(
+    (task) => !isTaskCompleted(task.id, task.status, completions),
+  )
   const taskCounts = { tasks: openTasks.length, timeline: 0, notes: 0, documents: 0 }
 
   return (
@@ -224,7 +230,8 @@ export function LiveFileDetail() {
             <CardContent>
               {generatedTasks.map((task) => (
                 <Box key={task.id} sx={{ display: "flex", alignItems: "center", gap: 1, py: 1 }}>
-                  <Typography sx={{ flex: 1, textDecoration: task.status === "Completed" ? "line-through" : "none" }}>{task.title}</Typography>
+                  <GeneratedTaskCheckbox task={task} actorId={actorId} />
+                  <Typography sx={{ flex: 1, textDecoration: isTaskCompleted(task.id, task.status, completions) ? "line-through" : "none" }}>{task.title}</Typography>
                   <Typography variant="caption" color="text.secondary">{task.dueDate ? formatDate(task.dueDate) : "No due date"}</Typography>
                 </Box>
               ))}

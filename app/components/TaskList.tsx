@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { Box, Typography, Chip, FormControl, Select, MenuItem, Avatar } from "@mui/material";
 import type { Task, MortgageFile, TaskFilter } from "@/app/lib/types";
 import { colorFromString, formatRelative, getInitials, isOverdue, isToday, isTomorrow } from "@/app/lib/utils";
 import { SALESFORCE_OWNERS } from "@/app/lib/sf-leads";
+import { useAtom, useAtomValue } from "jotai";
+import { isTaskCompleted, taskCompletionsAtom, taskFiltersAtom } from "@/app/lib/task-state";
 
 const FILTER_OPTIONS: { value: TaskFilter; label: string }[] = [
   { value: "today", label: "Due Today" },
@@ -32,18 +34,23 @@ function filterTasks(tasks: Task[], filter: TaskFilter): Task[] {
 }
 
 export function TaskList({ tasks, fileMap, currentSpecialistId }: { tasks: Task[]; fileMap: Map<string, MortgageFile>; currentSpecialistId: string }) {
-  const [filter, setFilter] = useState<TaskFilter>("today");
-  const [ownerId, setOwnerId] = useState(currentSpecialistId);
+  const [filters, setFilters] = useAtom(taskFiltersAtom);
+  const filter = filters.filter;
+  const ownerId = filters.ownerId || currentSpecialistId;
+  const completions = useAtomValue(taskCompletionsAtom);
 
   const scoped = useMemo(() => {
-    if (ownerId === UNASSIGNED) return tasks.filter((task) => task.status === "Open" && !task.assignedTo.id);
-    if (ownerId !== ALL_PEOPLE) return tasks.filter((task) => task.status === "Open" && task.assignedTo.id === ownerId);
-    return tasks.filter((task) => task.status === "Open");
-  }, [tasks, ownerId]);
+    const openTasks = tasks.filter(
+      (task) => !isTaskCompleted(task.id, task.status, completions),
+    );
+    if (ownerId === UNASSIGNED) return openTasks.filter((task) => !task.assignedTo.id);
+    if (ownerId !== ALL_PEOPLE) return openTasks.filter((task) => task.assignedTo.id === ownerId);
+    return openTasks;
+  }, [tasks, ownerId, completions]);
 
   const filtered = useMemo(() => filterTasks(scoped, filter), [scoped, filter]);
 
-  const myTasks = useMemo(() => tasks.filter((t) => t.status === "Open" && t.assignedTo.id === currentSpecialistId), [tasks, currentSpecialistId]);
+  const myTasks = useMemo(() => tasks.filter((task) => !isTaskCompleted(task.id, task.status, completions) && task.assignedTo.id === currentSpecialistId), [tasks, currentSpecialistId, completions]);
   const myOverdueCount = useMemo(() => myTasks.filter((t) => t.dueDate && isOverdue(t.dueDate) && !isToday(t.dueDate)).length, [myTasks]);
 
   const counts = useMemo(() => {
@@ -62,7 +69,7 @@ export function TaskList({ tasks, fileMap, currentSpecialistId }: { tasks: Task[
         <FormControl size="small" sx={{ minWidth: 170 }}>
           <Select
             value={ownerId || ALL_PEOPLE}
-            onChange={(e) => setOwnerId(e.target.value)}
+            onChange={(e) => setFilters((current) => ({ ...current, ownerId: e.target.value }))}
             renderValue={(selected) => {
               const owner = SALESFORCE_OWNERS.find((item) => item.Id === selected);
               const label = owner?.Name ?? (selected === UNASSIGNED ? "Unassigned" : "Everyone");
@@ -78,7 +85,7 @@ export function TaskList({ tasks, fileMap, currentSpecialistId }: { tasks: Task[
         <FormControl size="small" sx={{ minWidth: 200 }}>
           <Select
             value={filter}
-            onChange={(e) => setFilter(e.target.value as TaskFilter)}
+            onChange={(e) => setFilters((current) => ({ ...current, filter: e.target.value as "today" | "tomorrow" | "upcoming" | "overdue" }))}
           >
             {FILTER_OPTIONS.map((opt) => (
               <MenuItem key={opt.value} value={opt.value}>
@@ -93,7 +100,7 @@ export function TaskList({ tasks, fileMap, currentSpecialistId }: { tasks: Task[
             color="error"
             size="small"
             clickable
-            onClick={() => { setOwnerId(currentSpecialistId); setFilter("overdue"); }}
+            onClick={() => setFilters((current) => ({ ...current, ownerId: currentSpecialistId, filter: "overdue" }))}
             sx={{ fontWeight: 500 }}
           />
         )}
