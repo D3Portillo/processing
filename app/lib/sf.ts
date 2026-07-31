@@ -1,6 +1,30 @@
-const SF_BASE = "https://force-energy-1679.my.salesforce.com"
+export const SF_BASE =
+  process.env.SF_BASE_URL ?? "https://force-energy-1679.my.salesforce.com"
 
 export const SF_API = `${SF_BASE}/services/data/v66.0`
+
+export const SF_LOGIN_URL =
+  process.env.SF_LOGIN_URL ?? "https://login.salesforce.com"
+
+export function getSalesforceOAuthConfig() {
+  const clientId = process.env.SF_OAUTH_CLIENT_ID
+  const clientSecret = process.env.SF_OAUTH_CLIENT_SECRET
+  const redirectUri = process.env.SF_OAUTH_REDIRECT_URI
+
+  if (!clientId || !clientSecret || !redirectUri) {
+    throw new Error("Missing Salesforce OAuth environment variables")
+  }
+
+  return { clientId, clientSecret, redirectUri }
+}
+
+export interface SalesforceIdentity {
+  user_id: string
+  username: string
+  display_name: string
+  email: string
+  organization_id: string
+}
 
 let cachedToken: { value: string; expiresAt: number } | null = null
 

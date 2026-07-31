@@ -3,9 +3,15 @@
 import { Container, Box } from "@mui/material"
 import { Nav } from "@/app/components/Nav"
 import { LiveFiles } from "@/app/components/LiveFiles"
+import { useSalesforceUser } from "@/app/hooks/useSalesforceUser"
+import { SALESFORCE_OWNERS } from "@/app/lib/sf-leads"
 
 export default function AllFilesPage() {
-  const currentSpecialistId = "sp-1"
+  const { data } = useSalesforceUser()
+  const currentSpecialistId =
+    SALESFORCE_OWNERS.find(
+      (owner) => owner.Email?.toLowerCase() === data?.user?.email.toLowerCase(),
+    )?.Id ?? ""
 
   return (
     <Box>

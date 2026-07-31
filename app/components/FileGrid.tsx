@@ -8,13 +8,18 @@ import {
   Select,
   MenuItem,
   InputAdornment,
+  Avatar,
+  Typography,
 } from "@mui/material"
 import { Search } from "lucide-react"
 import type { MortgageFile } from "@/app/lib/types"
 import { FileCard } from "./FileCard"
 import { useLeads } from "@/hooks/useLeads"
+import { colorFromString, getInitials } from "@/app/lib/utils"
+import { SALESFORCE_OWNERS } from "@/app/lib/sf-leads"
 
-type ScopeOption = "mine" | "unassigned" | "all"
+const ALL_PEOPLE = "all"
+const UNASSIGNED = "unassigned"
 
 export function FileGrid({
   files,
@@ -25,15 +30,15 @@ export function FileGrid({
 }) {
   const { totalLeads } = useLeads()
   const [query, setQuery] = useState("")
-  const [scope, setScope] = useState<ScopeOption>("all")
+  const [ownerId, setOwnerId] = useState(currentSpecialistId)
 
   const filtered = useMemo(() => {
     let result = files
 
-    if (scope === "mine") {
-      result = result.filter((f) => f.specialist?.id === currentSpecialistId)
-    } else if (scope === "unassigned") {
+    if (ownerId === UNASSIGNED) {
       result = result.filter((f) => !f.specialist)
+    } else if (ownerId !== ALL_PEOPLE) {
+      result = result.filter((f) => f.specialist?.id === ownerId)
     }
 
     if (query.trim()) {
@@ -48,7 +53,7 @@ export function FileGrid({
     }
 
     return result
-  }, [files, query, scope, currentSpecialistId])
+  }, [files, query, ownerId])
 
   return (
     <Box>
@@ -69,14 +74,78 @@ export function FileGrid({
             },
           }}
         />
-        <FormControl size="small" sx={{ minWidth: 170 }}>
+        <FormControl size="small" sx={{ minWidth: 220 }}>
           <Select
-            value={scope}
-            onChange={(e) => setScope(e.target.value as ScopeOption)}
+            value={ownerId || ALL_PEOPLE}
+            onChange={(e) => setOwnerId(e.target.value)}
+            renderValue={(selected) => {
+              const selectedOwner = SALESFORCE_OWNERS.find(
+                (item) => item.Id === selected,
+              )
+              const label =
+                selectedOwner?.Name ??
+                (selected === UNASSIGNED ? "Unassigned" : "Everyone")
+              const avatarColor = selectedOwner
+                ? colorFromString(selectedOwner.Id)
+                : selected === UNASSIGNED
+                  ? "grey.400"
+                  : "primary.main"
+
+              return (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Avatar
+                    sx={{
+                      width: 24,
+                      height: 24,
+                      fontSize: "0.6rem",
+                      bgcolor: avatarColor,
+                    }}
+                  >
+                    {selectedOwner
+                      ? getInitials(selectedOwner.Name)
+                      : getInitials(label)}
+                  </Avatar>
+                  <Typography variant="body2">
+                    {selected === currentSpecialistId ? "Me" : label}
+                  </Typography>
+                </Box>
+              )
+            }}
           >
-            <MenuItem value="mine">Assigned to Me</MenuItem>
-            <MenuItem value="unassigned">Unassigned</MenuItem>
-            <MenuItem value="all">All Files</MenuItem>
+            <MenuItem value={currentSpecialistId || ALL_PEOPLE}>
+              <Avatar
+                sx={{
+                  width: 24,
+                  height: 24,
+                  mr: 1,
+                  fontSize: "0.6rem",
+                  bgcolor: colorFromString(currentSpecialistId),
+                }}
+              >
+                {getInitials("Me")}
+              </Avatar>
+              Me
+            </MenuItem>
+            {SALESFORCE_OWNERS.filter(
+              (owner) => owner.Id !== currentSpecialistId,
+            ).map((owner) => (
+              <MenuItem key={owner.Id} value={owner.Id}>
+                <Avatar
+                  sx={{
+                    width: 24,
+                    height: 24,
+                    mr: 1,
+                    fontSize: "0.6rem",
+                    bgcolor: colorFromString(owner.Id),
+                  }}
+                >
+                  {getInitials(owner.Name)}
+                </Avatar>
+                {owner.Name}
+              </MenuItem>
+            ))}
+            <MenuItem value={UNASSIGNED}>Unassigned</MenuItem>
+            <MenuItem value={ALL_PEOPLE}>Everyone</MenuItem>
           </Select>
         </FormControl>
       </Box>

@@ -16,6 +16,7 @@ import {
 } from "@mui/material"
 import { Phone, Mail, MapPin, Clock, User } from "lucide-react"
 import { useLeads } from "@/app/hooks/useLeads"
+import { useSalesforceUser } from "@/app/hooks/useSalesforceUser"
 import { mapLeadToMortgageFile } from "@/app/lib/lead-mapper"
 import { Nav } from "@/app/components/Nav"
 import { FileMenu } from "@/app/components/FileMenu"
@@ -30,6 +31,7 @@ import { colorFromString, formatDate, formatRelative } from "@/app/lib/utils"
 export function LiveFileDetail() {
   const params = useParams<{ fileId: string }>()
   const { data: leads, error, isLoading } = useLeads()
+  const { data: connectedUser } = useSalesforceUser()
 
   if (isLoading) {
     return (
@@ -59,6 +61,10 @@ export function LiveFileDetail() {
     email: owner.Email ?? "",
     avatarColor: colorFromString(owner.Id),
   }))
+  const actor = specialists.find(
+    (specialist) => specialist.email.toLowerCase() === connectedUser?.user?.email.toLowerCase(),
+  )
+  const actorId = actor?.id ?? file.specialist?.id ?? specialists[0]?.id ?? ""
   const emptyCounts = { tasks: 0, timeline: 0, notes: 0, documents: 0 }
 
   return (
@@ -95,7 +101,7 @@ export function LiveFileDetail() {
               <FileMenu
                 fileId={file.id}
                 currentStage={file.stage}
-                actorId={file.specialist?.id ?? ""}
+                actorId={actorId}
               />
             </Box>
           </Box>
@@ -104,7 +110,7 @@ export function LiveFileDetail() {
               fileId={file.id}
               current={file.specialist}
               specialists={specialists}
-              actorId={file.specialist?.id ?? specialists[0]?.id ?? ""}
+              actorId={actorId}
             />
           </Box>
         </Container>
@@ -207,7 +213,7 @@ export function LiveFileDetail() {
           <AddTaskDialog
             fileId={file.id}
             specialists={specialists}
-            actorId={file.specialist?.id ?? specialists[0]?.id ?? ""}
+            actorId={actorId}
           />
         </Box>
         <FileTabs counts={emptyCounts}>

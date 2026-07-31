@@ -3,6 +3,7 @@
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
+import { AuthGate } from "@/app/components/AuthGate";
 
 const theme = createTheme({
   cssVariables: true,
@@ -17,7 +18,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <AppRouterCacheProvider options={{ enableCssLayer: true }}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        {children}
+        <AuthGate>{children}</AuthGate>
       </ThemeProvider>
     </AppRouterCacheProvider>
   );

@@ -5,9 +5,12 @@ import Link from "next/link";
 import { AppBar, Toolbar, Typography, Container, Box, IconButton } from "@mui/material";
 import { Search } from "lucide-react";
 import { SearchDialog } from "./SearchDialog";
+import { useSalesforceUser } from "@/app/hooks/useSalesforceUser";
+import { ProfileMenu } from "./ProfileMenu";
 
 export function Nav({ active }: { active: "tasks" | "sales" | "files" | "people" }) {
   const [searchOpen, setSearchOpen] = useState(false);
+  const { data } = useSalesforceUser();
 
   const links = [
     { href: "/", label: "Tasks", key: "tasks" as const },
@@ -60,6 +63,15 @@ export function Nav({ active }: { active: "tasks" | "sales" | "files" | "people"
               <IconButton size="small" onClick={() => setSearchOpen(true)} sx={{ color: "text.secondary", ml: 1 }}>
                 <Search size={18} />
               </IconButton>
+              {data?.user ? (
+                <ProfileMenu user={data.user} />
+              ) : (
+                  <Link href="/api/auth/google/login" style={{ textDecoration: "none" }}>
+                  <Typography variant="caption" color="primary.main" noWrap>
+                    Sign in with Google
+                  </Typography>
+                </Link>
+              )}
             </Box>
           </Toolbar>
         </Container>
