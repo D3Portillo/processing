@@ -18,6 +18,14 @@ export const taskFiltersAtom = atomWithStorage<{
   filter: "today",
 })
 
+export const fileFiltersAtom = atomWithStorage<{
+  ownerId: string
+  query: string
+}>("processing:file-filters", {
+  ownerId: "",
+  query: "",
+})
+
 export function isTaskCompleted(
   taskId: string,
   status: "Open" | "Completed",

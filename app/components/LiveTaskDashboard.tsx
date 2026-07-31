@@ -5,7 +5,7 @@ import { useLeads } from "@/app/hooks/useLeads"
 import { useSalesforceUser } from "@/app/hooks/useSalesforceUser"
 import { mapLeadToMortgageFile } from "@/app/lib/lead-mapper"
 import { deriveLeadTasks } from "@/app/lib/lead-tasks"
-import { SALESFORCE_OWNERS } from "@/app/lib/sf-leads"
+import { PROCESSING_TEAM } from "@/app/lib/sf-leads"
 import { TaskList } from "@/app/components/TaskList"
 
 export function LiveTaskDashboard() {
@@ -15,7 +15,7 @@ export function LiveTaskDashboard() {
   if (isLoading) return <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}><CircularProgress /></Box>
   if (error) return <Alert severity="error">{error.message}</Alert>
 
-  const owners = SALESFORCE_OWNERS.map((owner) => ({
+  const owners = PROCESSING_TEAM.map((owner) => ({
     id: owner.Id,
     name: owner.Name,
     email: owner.Email ?? "",

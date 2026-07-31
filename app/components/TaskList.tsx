@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Box, Typography, Chip, FormControl, Select, MenuItem, Avatar } from "@mui/material";
 import type { Task, MortgageFile, TaskFilter } from "@/app/lib/types";
 import { colorFromString, formatRelative, getInitials, isOverdue, isToday, isTomorrow } from "@/app/lib/utils";
-import { SALESFORCE_OWNERS } from "@/app/lib/sf-leads";
+import { PROCESSING_TEAM } from "@/app/lib/sf-leads";
 import { useAtom, useAtomValue } from "jotai";
 import { isTaskCompleted, taskCompletionsAtom, taskFiltersAtom } from "@/app/lib/task-state";
 
@@ -71,13 +71,13 @@ export function TaskList({ tasks, fileMap, currentSpecialistId }: { tasks: Task[
             value={ownerId || ALL_PEOPLE}
             onChange={(e) => setFilters((current) => ({ ...current, ownerId: e.target.value }))}
             renderValue={(selected) => {
-              const owner = SALESFORCE_OWNERS.find((item) => item.Id === selected);
+              const owner = PROCESSING_TEAM.find((item) => item.Id === selected);
               const label = owner?.Name ?? (selected === UNASSIGNED ? "Unassigned" : "Everyone");
               return <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}><Avatar sx={{ width: 24, height: 24, fontSize: "0.6rem", bgcolor: owner ? colorFromString(owner.Id) : selected === UNASSIGNED ? "grey.400" : "primary.main" }}>{getInitials(selected === currentSpecialistId ? "Me" : label)}</Avatar>{selected === currentSpecialistId ? "Me" : label}</Box>;
             }}
           >
             <MenuItem value={currentSpecialistId || ALL_PEOPLE}><Avatar sx={{ width: 24, height: 24, mr: 1, fontSize: "0.6rem", bgcolor: colorFromString(currentSpecialistId) }}>{getInitials("Me")}</Avatar>Me</MenuItem>
-            {SALESFORCE_OWNERS.filter((owner) => owner.Id !== currentSpecialistId).map((owner) => <MenuItem key={owner.Id} value={owner.Id}><Avatar sx={{ width: 24, height: 24, mr: 1, fontSize: "0.6rem", bgcolor: colorFromString(owner.Id) }}>{getInitials(owner.Name)}</Avatar>{owner.Name}</MenuItem>)}
+            {PROCESSING_TEAM.filter((owner) => owner.Id !== currentSpecialistId).map((owner) => <MenuItem key={owner.Id} value={owner.Id}><Avatar sx={{ width: 24, height: 24, mr: 1, fontSize: "0.6rem", bgcolor: colorFromString(owner.Id) }}>{getInitials(owner.Name)}</Avatar>{owner.Name}</MenuItem>)}
             <MenuItem value={UNASSIGNED}>Unassigned</MenuItem>
             <MenuItem value={ALL_PEOPLE}>Everyone</MenuItem>
           </Select>

@@ -3,11 +3,11 @@
 import { Container, Typography, Box, Card, CardContent, Stack, Avatar } from "@mui/material";
 import { Mail } from "lucide-react";
 import { Nav } from "@/app/components/Nav";
-import { SALESFORCE_OWNERS } from "@/app/lib/sf-leads";
+import { ALL_USERS } from "@/app/lib/sf-leads";
 import { colorFromString, getInitials } from "@/app/lib/utils";
 
 export default function PeoplePage() {
-  const specialists = SALESFORCE_OWNERS.map((owner) => ({
+  const specialists = ALL_USERS.map((owner) => ({
     id: owner.Id,
     name: owner.Name,
     email: owner.Email ?? "",

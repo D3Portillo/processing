@@ -1,6 +1,6 @@
 "use client"
 
-import { useDeferredValue, useState, useMemo } from "react"
+import { useDeferredValue, useMemo } from "react"
 import {
   Box,
   TextField,
@@ -16,7 +16,9 @@ import type { MortgageFile } from "@/app/lib/types"
 import { FileCard } from "./FileCard"
 import { useLeads } from "@/hooks/useLeads"
 import { colorFromString, getInitials } from "@/app/lib/utils"
-import { SALESFORCE_OWNERS } from "@/app/lib/sf-leads"
+import { ALL_USERS } from "@/app/lib/sf-leads"
+import { useAtom } from "jotai"
+import { fileFiltersAtom } from "@/app/lib/task-state"
 
 const ALL_PEOPLE = "all"
 const UNASSIGNED = "unassigned"
@@ -31,8 +33,9 @@ export function FileGrid({
   visibleCount: number
 }) {
   const { totalLeads } = useLeads()
-  const [query, setQuery] = useState("")
-  const [ownerId, setOwnerId] = useState(currentSpecialistId)
+  const [filters, setFilters] = useAtom(fileFiltersAtom)
+  const query = filters.query
+  const ownerId = filters.ownerId || currentSpecialistId
   const deferredQuery = useDeferredValue(query)
   const isSearching = deferredQuery.trim().length > 0
 
@@ -68,7 +71,7 @@ export function FileGrid({
           size="small"
           placeholder={`Search in all files ${totalLeads > 0 ? `(${totalLeads})` : ""}`}
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => setFilters((current) => ({ ...current, query: e.target.value }))}
           sx={{ flexGrow: 1 }}
           slotProps={{
             input: {
@@ -83,9 +86,9 @@ export function FileGrid({
         <FormControl size="small" sx={{ minWidth: 220 }}>
           <Select
             value={ownerId || ALL_PEOPLE}
-            onChange={(e) => setOwnerId(e.target.value)}
+            onChange={(e) => setFilters((current) => ({ ...current, ownerId: e.target.value }))}
             renderValue={(selected) => {
-              const selectedOwner = SALESFORCE_OWNERS.find(
+              const selectedOwner = ALL_USERS.find(
                 (item) => item.Id === selected,
               )
               const label =
@@ -136,7 +139,7 @@ export function FileGrid({
               </Avatar>
               Me
             </MenuItem>
-            {SALESFORCE_OWNERS.filter(
+            {ALL_USERS.filter(
               (owner) => owner.Id !== currentSpecialistId,
             ).map((owner) => (
               <MenuItem key={owner.Id} value={owner.Id}>

@@ -9,9 +9,11 @@ export interface SalesforceOwner {
   AvatarUrl?: string | null
 }
 
-export const SALESFORCE_OWNERS = (owners as SalesforceOwner[])
-  .filter((o) => o.Email?.includes("retentiongroup.org"))
-  .filter((o) => o.isProcessingTeamMember)
+export const ALL_USERS = (owners as SalesforceOwner[]).filter((o) =>
+  o.Email?.includes("retentiongroup.org"),
+)
+
+export const PROCESSING_TEAM = ALL_USERS.filter((o) => o.isProcessingTeamMember)
 
 export interface SalesforceLead {
   Email: string | null

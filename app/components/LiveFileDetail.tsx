@@ -26,7 +26,7 @@ import { StageBadge } from "@/app/components/StageBadge"
 import { FileTabs } from "@/app/components/FileTabs"
 import { AddTaskDialog } from "@/app/components/AddTaskDialog"
 import { AssignSelector } from "@/app/components/AssignSelector"
-import { SALESFORCE_OWNERS } from "@/app/lib/sf-leads"
+import { ALL_USERS } from "@/app/lib/sf-leads"
 import { colorFromString, formatDate, formatRelative } from "@/app/lib/utils"
 import { GeneratedTaskCheckbox } from "@/app/components/GeneratedTaskCheckbox"
 import { useAtomValue } from "jotai"
@@ -60,7 +60,7 @@ export function LiveFileDetail() {
   }
 
   const file = mapLeadToMortgageFile(lead)
-  const specialists = SALESFORCE_OWNERS.map((owner) => ({
+  const specialists = ALL_USERS.map((owner) => ({
     id: owner.Id,
     name: owner.Name,
     email: owner.Email ?? "",

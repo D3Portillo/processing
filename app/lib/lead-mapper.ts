@@ -1,6 +1,6 @@
 import type { MortgageFile, Stage } from "./types"
 import { LENDERS } from "./lenders"
-import { SALESFORCE_OWNERS } from "./sf-leads"
+import { ALL_USERS } from "./sf-leads"
 import type { SalesforceLead } from "./sf-leads"
 import { colorFromString } from "./utils"
 
@@ -40,7 +40,7 @@ function toIsoDate(value: string | null): string | null {
 }
 
 function mapSpecialist(id: string | null) {
-  const owner = id ? SALESFORCE_OWNERS.find((item) => item.Id === id) : null
+  const owner = id ? ALL_USERS.find((item) => item.Id === id) : null
 
   return id
     ? {
