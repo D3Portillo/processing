@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "sync:owners": "tsx scripts/sync-salesforce-owners.ts"
+    "sync:users": "tsx scripts/sync-salesforce-owners.ts"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",
