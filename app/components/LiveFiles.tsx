@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { Alert, CircularProgress, Box } from "@mui/material"
 import { useLeads } from "@/app/hooks/useLeads"
 import { mapLeadToMortgageFile } from "@/app/lib/lead-mapper"
@@ -11,7 +11,11 @@ export function LiveFiles({
 }: {
   currentSpecialistId: string
 }) {
-  const { leads, error, isLoading, hasMore, loadMore } = useLeads()
+  const { data, leads, error, isLoading, hasMore, loadMore } = useLeads()
+  const allFiles = useMemo(
+    () => (data ?? []).map(mapLeadToMortgageFile),
+    [data],
+  )
   const sentinelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -43,8 +47,9 @@ export function LiveFiles({
   return (
     <>
       <FileGrid
-        files={leads.map(mapLeadToMortgageFile)}
+        files={allFiles}
         currentSpecialistId={currentSpecialistId}
+        visibleCount={leads.length}
       />
       <Box
         ref={sentinelRef}

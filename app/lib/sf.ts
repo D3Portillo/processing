@@ -76,20 +76,28 @@ export interface SFQueryResponse<T> {
   totalSize: number
   done: boolean
   records: T[]
+  nextRecordsUrl?: string
 }
 
 export async function sfQuery<T>(soql: string, token?: string): Promise<T[]> {
   const authorization = token ?? (await getToken())
-  const url = `${SF_API}/query/?q=${encodeURIComponent(soql)}`
-  const res = await fetch(url, {
-    headers: { Authorization: authorization },
-    cache: "no-store",
-  })
+  let url: string | URL = `${SF_API}/query/?q=${encodeURIComponent(soql)}`
+  const records: T[] = []
 
-  if (!res.ok) {
-    throw new Error(`SF query failed (${res.status}): ${await res.text()}`)
+  while (url) {
+    const res = await fetch(url, {
+      headers: { Authorization: authorization },
+      cache: "no-store",
+    })
+
+    if (!res.ok) {
+      throw new Error(`SF query failed (${res.status}): ${await res.text()}`)
+    }
+
+    const data = (await res.json()) as SFQueryResponse<T>
+    records.push(...data.records)
+    url = data.nextRecordsUrl ? new URL(data.nextRecordsUrl, SF_BASE) : ""
   }
 
-  const data = (await res.json()) as SFQueryResponse<T>
-  return data.records
+  return records
 }

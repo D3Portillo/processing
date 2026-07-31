@@ -4,6 +4,7 @@ import { getActiveLeads } from "@/app/lib/sf-leads"
 export async function GET() {
   try {
     const leads = await getActiveLeads()
+    console.debug(`Total Leads: ${leads.length}`)
     return NextResponse.json(leads)
   } catch (error) {
     const message =

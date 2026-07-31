@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from "react"
 import useSWRImmutable from "swr/immutable"
 import type { SalesforceLead } from "@/app/lib/sf-leads"
 
-const LEADS_CACHE_KEY = "processing:leads"
+const LEADS_CACHE_KEY = "processing:leads:v2"
 const LEADS_CACHE_TTL = 10 * 60 * 1000
 const LEADS_PAGE_SIZE = 100
 
@@ -13,7 +13,7 @@ type CachedLeads = {
   leads: SalesforceLead[]
 }
 
-const fetcher = async (url: string): Promise<SalesforceLead[]> => {
+const fetcher = async (): Promise<SalesforceLead[]> => {
   if (typeof window !== "undefined") {
     try {
       const cached = localStorage.getItem(LEADS_CACHE_KEY)
@@ -33,7 +33,7 @@ const fetcher = async (url: string): Promise<SalesforceLead[]> => {
     }
   }
 
-  const res = await fetch(url)
+  const res = await fetch("/api/leads")
   const data = (await res.json()) as SalesforceLead[] | { error?: string }
 
   if (!res.ok) {
@@ -61,7 +61,8 @@ const fetcher = async (url: string): Promise<SalesforceLead[]> => {
 export function useLeads() {
   const { data, error, isLoading, isValidating, mutate } = useSWRImmutable<
     SalesforceLead[]
-  >("/api/leads", fetcher)
+  >(`all-leads`, fetcher)
+
   const [visibleCount, setVisibleCount] = useState(LEADS_PAGE_SIZE)
   const leads = useMemo(
     () => (data ?? []).slice(0, visibleCount),

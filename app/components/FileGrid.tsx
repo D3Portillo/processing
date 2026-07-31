@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useDeferredValue, useState, useMemo } from "react"
 import {
   Box,
   TextField,
@@ -24,25 +24,30 @@ const UNASSIGNED = "unassigned"
 export function FileGrid({
   files,
   currentSpecialistId,
+  visibleCount,
 }: {
   files: MortgageFile[]
   currentSpecialistId: string
+  visibleCount: number
 }) {
   const { totalLeads } = useLeads()
   const [query, setQuery] = useState("")
   const [ownerId, setOwnerId] = useState(currentSpecialistId)
+  const deferredQuery = useDeferredValue(query)
+  const isSearching = deferredQuery.trim().length > 0
 
-  const filtered = useMemo(() => {
+  const nextFiltered = useMemo(() => {
     let result = files
+    const filterOwnerId = isSearching ? ALL_PEOPLE : ownerId
 
-    if (ownerId === UNASSIGNED) {
+    if (filterOwnerId === UNASSIGNED) {
       result = result.filter((f) => !f.specialist)
-    } else if (ownerId !== ALL_PEOPLE) {
-      result = result.filter((f) => f.specialist?.id === ownerId)
+    } else if (filterOwnerId !== ALL_PEOPLE) {
+      result = result.filter((f) => f.specialist?.id === filterOwnerId)
     }
 
-    if (query.trim()) {
-      const q = query.toLowerCase()
+    if (deferredQuery.trim()) {
+      const q = deferredQuery.toLowerCase()
       result = result.filter(
         (f) =>
           f.borrower.name.toLowerCase().includes(q) ||
@@ -52,8 +57,9 @@ export function FileGrid({
       )
     }
 
-    return result
-  }, [files, query, ownerId])
+    return result.slice(0, isSearching ? 100 : visibleCount)
+  }, [files, deferredQuery, ownerId, isSearching, visibleCount])
+  const filtered = useDeferredValue(nextFiltered)
 
   return (
     <Box>
