@@ -13,7 +13,7 @@ export type Stage =
   | "Pending Approved"
   | "Denied"
   | "Escalation"
-  | "Closed";
+  | "Closed"
 
 export const STAGES: Stage[] = [
   "Processing",
@@ -27,9 +27,9 @@ export const STAGES: Stage[] = [
   "Denied",
   "Escalation",
   "Closed",
-];
+]
 
-export type TaskStatus = "Open" | "Completed";
+export type TaskStatus = "Open" | "Completed"
 
 export type TimelineEventType =
   | "task_completed"
@@ -38,106 +38,115 @@ export type TimelineEventType =
   | "stage_changed"
   | "file_assigned"
   | "document_uploaded"
-  | "file_created";
+  | "file_created"
 
 export interface Specialist {
-  id: string;
-  name: string;
-  email: string;
-  avatarColor: string;
+  id: string
+  name: string
+  email: string
+  avatarColor: string
 }
 
 export interface Lender {
-  id: string;
-  name: string;
-  phone: string;
-  email: string;
+  id: string
+  name: string
+  phone: string
+  email: string
 }
 
 export interface LenderContact {
-  id: string;
-  department: string;
-  name: string | null; // optional — if null, department is the contact
-  phone: string;
-  email: string;
-  lenderId: string;
+  id: string
+  department: string
+  name: string | null // optional — if null, department is the contact
+  phone: string
+  email: string
+  lenderId: string
 }
 
 export interface Borrower {
-  id: string;
-  name: string;
-  phone: string;
-  email: string;
-  propertyAddress: string;
-  loanNumber: string;
-  monthlyPayment: number;
+  id: string
+  name: string
+  phone: string
+  email: string
+  propertyAddress: string
+  loanNumber: string
+  monthlyPayment: number
+  loanType?: string | null
 }
 
 export interface MortgageFile {
-  id: string;
-  borrower: Borrower;
-  specialist: Specialist | null;
-  lender: Lender;
-  poc: LenderContact | null;
-  stage: Stage;
-  saleDate: string | null;
-  createdAt: string;
-  updatedAt: string;
+  id: string
+  borrower: Borrower
+  specialist: Specialist | null
+  lender: Lender
+  poc: LenderContact | null
+  stage: Stage
+  saleDate: string | null
+  createdAt: string
+  updatedAt: string
+  nextStatusUpdate?: string | null
+  lastLenderCall?: string | null
 }
 
 export interface Task {
-  id: string;
-  fileId: string;
-  title: string;
-  description: string | null;
-  assignedTo: Specialist;
-  dueDate: string | null; // ISO date string
-  status: TaskStatus;
-  createdAt: string;
-  completedAt: string | null;
+  id: string
+  fileId: string
+  title: string
+  description: string | null
+  assignedTo: Specialist
+  dueDate: string | null // ISO date string
+  status: TaskStatus
+  createdAt: string
+  completedAt: string | null
 }
 
 export interface Note {
-  id: string;
-  fileId: string;
-  author: Specialist;
-  body: string;
-  createdAt: string;
+  id: string
+  fileId: string
+  author: Specialist
+  body: string
+  createdAt: string
 }
 
 export interface TimelineEvent {
-  id: string;
-  fileId: string;
-  type: TimelineEventType;
-  actor: Specialist;
-  description: string;
-  metadata: Record<string, string> | null;
-  createdAt: string;
+  id: string
+  fileId: string
+  type: TimelineEventType
+  actor: Specialist
+  description: string
+  metadata: Record<string, string> | null
+  createdAt: string
 }
 
 export interface DocumentRecord {
-  id: string;
-  fileId: string;
-  name: string;
-  type: string;
-  uploadedBy: Specialist;
-  fileSize: number; // bytes
-  createdAt: string;
+  id: string
+  fileId: string
+  name: string
+  type: string
+  uploadedBy: Specialist
+  fileSize: number // bytes
+  createdAt: string
 }
 
 // Composite — used by the File detail page
 export interface MortgageFileDetail extends MortgageFile {
-  tasks: Task[];
-  notes: Note[];
-  timeline: TimelineEvent[];
-  documents: DocumentRecord[];
+  tasks: Task[]
+  notes: Note[]
+  timeline: TimelineEvent[]
+  documents: DocumentRecord[]
 }
 
 // Dashboard view models
-export type TaskFilter = "all" | "overdue" | "today" | "tomorrow" | "upcoming" | "no-due-date";
+export type TaskFilter =
+  | "all"
+  | "overdue"
+  | "today"
+  | "tomorrow"
+  | "upcoming"
+  | "no-due-date"
 
 export interface DashboardData {
-  allOpenTasks: Task[];
-  upcomingSaleDates: MortgageFile[];
-  recentlyUpdatedFiles: MortgageFile[];
+  allOpenTasks: Task[]
+  upcomingSaleDates: MortgageFile[]
+  recentlyUpdatedFiles: MortgageFile[]
 }

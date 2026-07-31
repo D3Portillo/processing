@@ -1,16 +1,18 @@
 "use client";
 
 import { Container, Typography, Box, Card, CardContent, Stack, Avatar } from "@mui/material";
-import { Phone, Mail, Building, Users } from "lucide-react";
-import { getAllSpecialists, getAllLenders, getAllLenderContacts, useStore } from "@/app/lib/mock-data";
+import { Mail } from "lucide-react";
 import { Nav } from "@/app/components/Nav";
-import { getInitials } from "@/app/lib/utils";
+import { SALESFORCE_OWNERS } from "@/app/lib/sf-leads";
+import { colorFromString, getInitials } from "@/app/lib/utils";
 
 export default function PeoplePage() {
-  useStore();
-  const specialists = getAllSpecialists();
-  const lenders = getAllLenders();
-  const contacts = getAllLenderContacts();
+  const specialists = SALESFORCE_OWNERS.map((owner) => ({
+    id: owner.Id,
+    name: owner.Name,
+    email: owner.Email ?? "",
+    avatarColor: colorFromString(owner.Id),
+  }));
 
   return (
     <Box>
@@ -40,48 +42,6 @@ export default function PeoplePage() {
           ))}
         </Box>
 
-        {/* Lender Contacts */}
-        <Typography variant="h5" sx={{ fontWeight: 500, mb: 3 }}>Lender Contacts</Typography>
-        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", lg: "1fr 1fr 1fr" }, gap: 2 }}>
-          {contacts.map((contact) => {
-            const lender = lenders.find((l) => l.id === contact.lenderId);
-            return (
-              <Card key={contact.id} variant="outlined">
-                <CardContent>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
-                    <Avatar sx={{ width: 40, height: 40, bgcolor: "grey.300" }}>
-                      <Users size={18} />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>{contact.department}</Typography>
-                      {contact.name ? (
-                        <Typography variant="caption" color="text.secondary">{contact.name}</Typography>
-                      ) : (
-                        <Typography variant="caption" color="text.secondary">Department contact</Typography>
-                      )}
-                    </Box>
-                  </Box>
-                  <Stack spacing={1}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Phone size={14} />
-                      <Typography variant="body2" color="text.secondary">{contact.phone}</Typography>
-                    </Box>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Mail size={14} />
-                      <Typography variant="body2" color="text.secondary" noWrap>{contact.email}</Typography>
-                    </Box>
-                    {lender && (
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <Building size={14} />
-                        <Typography variant="caption" color="text.secondary">{lender.name}</Typography>
-                      </Box>
-                    )}
-                  </Stack>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </Box>
       </Container>
     </Box>
   );

@@ -32,6 +32,18 @@ export function getInitials(name: string): string {
   return parts[0].slice(0, 2).toUpperCase();
 }
 
+export function colorFromString(value: string): string {
+  let hash = 0
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(index)
+    hash |= 0
+  }
+
+  const color = (hash >>> 0).toString(16).padStart(6, "0").slice(-6)
+  return `#${color}`
+}
+
 export function isOverdue(date: Date | string | number): boolean {
   return new Date(date).getTime() < new Date().setHours(0, 0, 0, 0);
 }

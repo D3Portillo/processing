@@ -76,8 +76,8 @@ export function LenderCard({ lender, contacts, saleDate }: { lender: Lender; con
             <Typography variant="body2" sx={{ fontWeight: 500 }}>
               {saleDate ? formatDate(saleDate) : "N/A"}
             </Typography>
-            {saleDate && (
-              <Typography variant="caption" color={pastSale ? "error" : "text.secondary"} sx={{ fontWeight: 500 }}>
+            {pastSale && (
+              <Typography variant="caption" color="error" sx={{ fontWeight: 500 }}>
                 ({formatRelative(saleDate)})
               </Typography>
             )}

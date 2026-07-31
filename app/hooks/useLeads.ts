@@ -74,6 +74,7 @@ export function useLeads() {
 
   return {
     data,
+    totalLeads: data?.length || 0,
     error,
     isLoading,
     isValidating,

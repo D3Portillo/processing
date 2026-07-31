@@ -1,46 +1,61 @@
-"use client";
+"use client"
 
-import { useState, useMemo } from "react";
-import { Box, TextField, FormControl, Select, MenuItem, InputAdornment } from "@mui/material";
-import { Search } from "lucide-react";
-import type { MortgageFile } from "@/app/lib/types";
-import { FileCard } from "./FileCard";
+import { useState, useMemo } from "react"
+import {
+  Box,
+  TextField,
+  FormControl,
+  Select,
+  MenuItem,
+  InputAdornment,
+} from "@mui/material"
+import { Search } from "lucide-react"
+import type { MortgageFile } from "@/app/lib/types"
+import { FileCard } from "./FileCard"
+import { useLeads } from "@/hooks/useLeads"
 
-type ScopeOption = "mine" | "unassigned" | "all";
+type ScopeOption = "mine" | "unassigned" | "all"
 
-export function FileGrid({ files, currentSpecialistId }: { files: MortgageFile[]; currentSpecialistId: string }) {
-  const [query, setQuery] = useState("");
-  const [scope, setScope] = useState<ScopeOption>("mine");
+export function FileGrid({
+  files,
+  currentSpecialistId,
+}: {
+  files: MortgageFile[]
+  currentSpecialistId: string
+}) {
+  const { totalLeads } = useLeads()
+  const [query, setQuery] = useState("")
+  const [scope, setScope] = useState<ScopeOption>("all")
 
   const filtered = useMemo(() => {
-    let result = files;
+    let result = files
 
     if (scope === "mine") {
-      result = result.filter((f) => f.specialist?.id === currentSpecialistId);
+      result = result.filter((f) => f.specialist?.id === currentSpecialistId)
     } else if (scope === "unassigned") {
-      result = result.filter((f) => !f.specialist);
+      result = result.filter((f) => !f.specialist)
     }
 
     if (query.trim()) {
-      const q = query.toLowerCase();
+      const q = query.toLowerCase()
       result = result.filter(
         (f) =>
           f.borrower.name.toLowerCase().includes(q) ||
           f.lender.name.toLowerCase().includes(q) ||
           f.borrower.propertyAddress.toLowerCase().includes(q) ||
-          f.borrower.loanNumber.toLowerCase().includes(q)
-      );
+          f.borrower.loanNumber.toLowerCase().includes(q),
+      )
     }
 
-    return result;
-  }, [files, query, scope, currentSpecialistId]);
+    return result
+  }, [files, query, scope, currentSpecialistId])
 
   return (
     <Box>
       <Box sx={{ display: "flex", gap: 2, mb: 3, alignItems: "center" }}>
         <TextField
           size="small"
-          placeholder="Search files..."
+          placeholder={`Search in all files ${totalLeads > 0 ? `(${totalLeads})` : ""}`}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           sx={{ flexGrow: 1 }}
@@ -66,8 +81,16 @@ export function FileGrid({ files, currentSpecialistId }: { files: MortgageFile[]
         </FormControl>
       </Box>
 
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2 }}>
-        {filtered.map((file) => <FileCard key={file.id} file={file} />)}
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+          gap: 2,
+        }}
+      >
+        {filtered.map((file) => (
+          <FileCard key={file.id} file={file} />
+        ))}
       </Box>
 
       {filtered.length === 0 && (
@@ -76,5 +99,5 @@ export function FileGrid({ files, currentSpecialistId }: { files: MortgageFile[]
         </Box>
       )}
     </Box>
-  );
+  )
 }

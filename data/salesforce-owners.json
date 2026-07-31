@@ -1,0 +1,155 @@
+[
+  {
+    "attributes": {
+      "type": "User",
+      "url": "/services/data/v66.0/sobjects/User/005Pm00000BCJF3IAP"
+    },
+    "Id": "005Pm00000BCJF3IAP",
+    "Name": "Accounts Receivable",
+    "Email": "servicing@retentiongroup.org"
+  },
+  {
+    "attributes": {
+      "type": "User",
+      "url": "/services/data/v66.0/sobjects/User/005Pm00000Kc6qTIAR"
+    },
+    "Id": "005Pm00000Kc6qTIAR",
+    "Name": "Alex Walker",
+    "Email": "alex.walker@retentiongroup.org"
+  },
+  {
+    "attributes": {
+      "type": "User",
+      "url": "/services/data/v66.0/sobjects/User/005Hp00000iTVo4IAG"
+    },
+    "Id": "005Hp00000iTVo4IAG",
+    "Name": "Automated Process",
+    "Email": "noreply@00dhp000003vpvimaw"
+  },
+  {
+    "attributes": {
+      "type": "User",
+      "url": "/services/data/v66.0/sobjects/User/005Pm000004cRBNIA2"
+    },
+    "Id": "005Pm000004cRBNIA2",
+    "Name": "Emma Koons",
+    "Email": "intake@retentiongroup.org"
+  },
+  {
+    "attributes": {
+      "type": "User",
+      "url": "/services/data/v66.0/sobjects/User/005Pm00000KN0NBIA1"
+    },
+    "Id": "005Pm00000KN0NBIA1",
+    "Name": "Emma koons",
+    "Email": "client.support@retentiongroup.org"
+  },
+  {
+    "attributes": {
+      "type": "User",
+      "url": "/services/data/v66.0/sobjects/User/005Pm000003PI9hIAG"
+    },
+    "Id": "005Pm000003PI9hIAG",
+    "Name": "Insights Integration",
+    "Email": "insightsintegration@00dhp000003vpvimaw.ext"
+  },
+  {
+    "attributes": {
+      "type": "User",
+      "url": "/services/data/v66.0/sobjects/User/005Hp00000ikxLCIAY"
+    },
+    "Id": "005Hp00000ikxLCIAY",
+    "Name": "Integration User",
+    "Email": "noreply@salesforce.com"
+  },
+  {
+    "attributes": {
+      "type": "User",
+      "url": "/services/data/v66.0/sobjects/User/005Pm00000hWp3TIAS"
+    },
+    "Id": "005Pm00000hWp3TIAS",
+    "Name": "Isa Ali",
+    "Email": "isa@retentiongroup.org"
+  },
+  {
+    "attributes": {
+      "type": "User",
+      "url": "/services/data/v66.0/sobjects/User/005Pm00000GTPD7IAP"
+    },
+    "Id": "005Pm00000GTPD7IAP",
+    "Name": "John Paul",
+    "Email": "john.paul@retentiongroup.org"
+  },
+  {
+    "attributes": {
+      "type": "User",
+      "url": "/services/data/v66.0/sobjects/User/005Pm00000m3D5AIAU"
+    },
+    "Id": "005Pm00000m3D5AIAU",
+    "Name": "Julia Banks",
+    "Email": "julia@retentiongroup.org"
+  },
+  {
+    "attributes": {
+      "type": "User",
+      "url": "/services/data/v66.0/sobjects/User/005Pm00000qDgbNIAS"
+    },
+    "Id": "005Pm00000qDgbNIAS",
+    "Name": "Lisa Wilson",
+    "Email": "lisa.wilson@retentiongroup.org"
+  },
+  {
+    "attributes": {
+      "type": "User",
+      "url": "/services/data/v66.0/sobjects/User/005Pm000007QV7NIAW"
+    },
+    "Id": "005Pm000007QV7NIAW",
+    "Name": "Omar Harris",
+    "Email": "omar.harris@retentiongroup.org"
+  },
+  {
+    "attributes": {
+      "type": "User",
+      "url": "/services/data/v66.0/sobjects/User/005Pm000003PUveIAG"
+    },
+    "Id": "005Pm000003PUveIAG",
+    "Name": "Pathway Mortgage Relief",
+    "Email": "help@retentiongroup.org"
+  },
+  {
+    "attributes": {
+      "type": "User",
+      "url": "/services/data/v66.0/sobjects/User/005Hp00000iTVo7IAG"
+    },
+    "Id": "005Hp00000iTVo7IAG",
+    "Name": "Platform Integration User",
+    "Email": "noreply@00dhp000003vpvimaw"
+  },
+  {
+    "attributes": {
+      "type": "User",
+      "url": "/services/data/v66.0/sobjects/User/005Hp00000ikxLDIAY"
+    },
+    "Id": "005Hp00000ikxLDIAY",
+    "Name": "Security User",
+    "Email": "noreply@salesforce.com"
+  },
+  {
+    "attributes": {
+      "type": "User",
+      "url": "/services/data/v66.0/sobjects/User/005Hp00000hFflEIAS"
+    },
+    "Id": "005Hp00000hFflEIAS",
+    "Name": "System Admin",
+    "Email": "contact@cloudarsh.com"
+  },
+  {
+    "attributes": {
+      "type": "User",
+      "url": "/services/data/v66.0/sobjects/User/005Hp00000il7p2IAA"
+    },
+    "Id": "005Hp00000il7p2IAA",
+    "Name": "Unsubscribe link Site Guest User",
+    "Email": "unsubscribe_link@00dhp000003vpvimaw.org.force.com"
+  }
+]
