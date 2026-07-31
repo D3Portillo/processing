@@ -102,7 +102,11 @@ export function FileGrid({
                     }}
                   >
                     {selectedOwner
-                      ? getInitials(selectedOwner.Name)
+                      ? getInitials(
+                          selected === currentSpecialistId
+                            ? "Me"
+                            : selectedOwner.Name,
+                        )
                       : getInitials(label)}
                   </Avatar>
                   <Typography variant="body2">
