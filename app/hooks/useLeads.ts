@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from "react"
 import useSWRImmutable from "swr/immutable"
 import type { SalesforceLead } from "@/app/lib/sf-leads"
 
-const LEADS_CACHE_KEY = "processing:leads:v2"
+const LEADS_CACHE_KEY = "processing:leads:v3"
 const LEADS_CACHE_TTL = 10 * 60 * 1000
 const LEADS_PAGE_SIZE = 100
 
