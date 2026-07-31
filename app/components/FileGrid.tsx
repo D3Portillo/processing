@@ -33,7 +33,7 @@ export function FileGrid({ files, currentSpecialistId }: { files: MortgageFile[]
     }
 
     return result;
-  }, [files, query, scope]);
+  }, [files, query, scope, currentSpecialistId]);
 
   return (
     <Box>
@@ -66,7 +66,7 @@ export function FileGrid({ files, currentSpecialistId }: { files: MortgageFile[]
         </FormControl>
       </Box>
 
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", lg: "1fr 1fr 1fr" }, gap: 2 }}>
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2 }}>
         {filtered.map((file) => <FileCard key={file.id} file={file} />)}
       </Box>
 
