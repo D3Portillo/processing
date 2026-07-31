@@ -15,6 +15,7 @@
     },
     "Id": "005Pm00000Kc6qTIAR",
     "Name": "Alex Walker",
+    "isProcessingTeamMember": true,
     "Email": "alex.walker@retentiongroup.org"
   },
   {
@@ -33,6 +34,7 @@
     },
     "Id": "005Pm000004cRBNIA2",
     "Name": "Emma (Intake Mail)",
+    "isProcessingTeamMember": true,
     "Email": "intake@retentiongroup.org"
   },
   {
@@ -42,6 +44,7 @@
     },
     "Id": "005Pm00000KN0NBIA1",
     "Name": "Emma (Client Support)",
+    "isProcessingTeamMember": true,
     "Email": "client.support@retentiongroup.org"
   },
   {
@@ -86,6 +89,7 @@
       "url": "/services/data/v66.0/sobjects/User/005Pm00000m3D5AIAU"
     },
     "Id": "005Pm00000m3D5AIAU",
+    "isProcessingTeamMember": true,
     "Name": "Julia Banks",
     "Email": "julia@retentiongroup.org"
   },
@@ -95,6 +99,7 @@
       "url": "/services/data/v66.0/sobjects/User/005Pm00000qDgbNIAS"
     },
     "Id": "005Pm00000qDgbNIAS",
+    "isProcessingTeamMember": true,
     "Name": "Lisa Wilson",
     "Email": "lisa.wilson@retentiongroup.org"
   },

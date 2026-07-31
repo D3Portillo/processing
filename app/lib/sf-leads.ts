@@ -4,13 +4,14 @@ import owners from "@/data/salesforce-owners.json"
 export interface SalesforceOwner {
   Id: string
   Name: string
+  isProcessingTeamMember?: boolean
   Email: string | null
   AvatarUrl?: string | null
 }
 
-export const SALESFORCE_OWNERS = (owners as SalesforceOwner[]).filter((o) =>
-  o.Email?.includes("retentiongroup.org"),
-)
+export const SALESFORCE_OWNERS = (owners as SalesforceOwner[])
+  .filter((o) => o.Email?.includes("retentiongroup.org"))
+  .filter((o) => o.isProcessingTeamMember)
 
 export interface SalesforceLead {
   Email: string | null
@@ -32,7 +33,6 @@ export interface SalesforceLead {
 }
 
 const ACTIVE_LEAD_STATUSES = [
-  "Retainer Agreement Signed",
   "Processing",
   "W.E. SENT",
   "W.C. Complete",
@@ -50,7 +50,6 @@ const ACTIVE_LEAD_STATUSES = [
   "BK",
   "Qualified",
   "Refunded",
-  "UNRSPSV",
   "Non-Payment",
   "Closed",
 ] as const
