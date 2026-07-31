@@ -14,9 +14,9 @@ export function Nav({ active }: { active: "tasks" | "sales" | "files" | "people"
 
   const links = [
     { href: "/", label: "Tasks", key: "tasks" as const },
-    { href: "/sales", label: "Sales", key: "sales" as const },
     { href: "/files", label: "Files", key: "files" as const },
     { href: "/people", label: "People", key: "people" as const },
+    { href: "/sales", label: "Sales", key: "sales" as const },
   ];
 
   return (

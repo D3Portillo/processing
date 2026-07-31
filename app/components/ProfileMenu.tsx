@@ -26,7 +26,7 @@ export function ProfileMenu({ user }: { user: GoogleIdentity }) {
           width: 30,
           height: 30,
           fontSize: "0.75rem",
-          bgcolor: colorFromString(user.email),
+          bgcolor: colorFromString("ME"),
           cursor: "pointer",
         }}
       >

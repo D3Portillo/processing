@@ -18,6 +18,7 @@ import { Phone, Mail, MapPin, Clock, User } from "lucide-react"
 import { useLeads } from "@/app/hooks/useLeads"
 import { useSalesforceUser } from "@/app/hooks/useSalesforceUser"
 import { mapLeadToMortgageFile } from "@/app/lib/lead-mapper"
+import { deriveLeadTasks } from "@/app/lib/lead-tasks"
 import { Nav } from "@/app/components/Nav"
 import { FileMenu } from "@/app/components/FileMenu"
 import { LenderCard } from "@/app/components/LenderCard"
@@ -65,7 +66,9 @@ export function LiveFileDetail() {
     (specialist) => specialist.email.toLowerCase() === connectedUser?.user?.email.toLowerCase(),
   )
   const actorId = actor?.id ?? file.specialist?.id ?? specialists[0]?.id ?? ""
-  const emptyCounts = { tasks: 0, timeline: 0, notes: 0, documents: 0 }
+  const generatedTasks = deriveLeadTasks(lead, file.specialist ?? specialists[0])
+  const openTasks = generatedTasks.filter((task) => task.status === "Open")
+  const taskCounts = { tasks: openTasks.length, timeline: 0, notes: 0, documents: 0 }
 
   return (
     <Box>
@@ -216,15 +219,16 @@ export function LiveFileDetail() {
             actorId={actorId}
           />
         </Box>
-        <FileTabs counts={emptyCounts}>
+        <FileTabs counts={taskCounts}>
           <Card variant="outlined">
             <CardContent>
-              <Typography
-                color="text.secondary"
-                sx={{ textAlign: "center", py: 4 }}
-              >
-                No tasks yet. Create one to get started.
-              </Typography>
+              {generatedTasks.map((task) => (
+                <Box key={task.id} sx={{ display: "flex", alignItems: "center", gap: 1, py: 1 }}>
+                  <Typography sx={{ flex: 1, textDecoration: task.status === "Completed" ? "line-through" : "none" }}>{task.title}</Typography>
+                  <Typography variant="caption" color="text.secondary">{task.dueDate ? formatDate(task.dueDate) : "No due date"}</Typography>
+                </Box>
+              ))}
+              {generatedTasks.length === 0 && <Typography color="text.secondary" sx={{ textAlign: "center", py: 4 }}>No tasks yet.</Typography>}
             </CardContent>
           </Card>
           <Card variant="outlined">

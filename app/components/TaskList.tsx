@@ -2,48 +2,53 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Box, Typography, Chip, FormControl, Select, MenuItem } from "@mui/material";
+import { Box, Typography, Chip, FormControl, Select, MenuItem, Avatar } from "@mui/material";
 import type { Task, MortgageFile, TaskFilter } from "@/app/lib/types";
-import { formatRelative, isOverdue, isToday, isTomorrow } from "@/app/lib/utils";
+import { colorFromString, formatRelative, getInitials, isOverdue, isToday, isTomorrow } from "@/app/lib/utils";
+import { SALESFORCE_OWNERS } from "@/app/lib/sf-leads";
 
 const FILTER_OPTIONS: { value: TaskFilter; label: string }[] = [
   { value: "today", label: "Due Today" },
-  { value: "overdue", label: "Overdue" },
   { value: "tomorrow", label: "Due Tomorrow" },
   { value: "upcoming", label: "Upcoming" },
-  { value: "all", label: "All Tasks" },
+  { value: "overdue", label: "Overdue" },
 ];
 
-type ScopeOption = "mine" | "all";
+const ALL_PEOPLE = "all";
+const UNASSIGNED = "unassigned";
 
 function filterTasks(tasks: Task[], filter: TaskFilter): Task[] {
+  const openTasks = tasks.filter((task) => task.status === "Open")
+
   switch (filter) {
-    case "overdue": return tasks.filter((t) => t.dueDate && isOverdue(t.dueDate) && !isToday(t.dueDate));
-    case "today": return tasks.filter((t) => t.dueDate && isToday(t.dueDate));
-    case "tomorrow": return tasks.filter((t) => t.dueDate && isTomorrow(t.dueDate));
-    case "upcoming": return tasks.filter((t) => t.dueDate && !isOverdue(t.dueDate) && !isToday(t.dueDate) && !isTomorrow(t.dueDate));
+    case "overdue": return openTasks.filter((t) => t.dueDate && isOverdue(t.dueDate) && !isToday(t.dueDate));
+    case "today": return openTasks.filter((t) => t.dueDate && isToday(t.dueDate));
+    case "tomorrow": return openTasks.filter((t) => t.dueDate && isTomorrow(t.dueDate));
+    case "upcoming": return openTasks.filter((t) => t.dueDate && !isOverdue(t.dueDate) && !isToday(t.dueDate) && !isTomorrow(t.dueDate));
     case "all":
     default:
-      return tasks;
+      return openTasks;
   }
 }
 
 export function TaskList({ tasks, fileMap, currentSpecialistId }: { tasks: Task[]; fileMap: Map<string, MortgageFile>; currentSpecialistId: string }) {
   const [filter, setFilter] = useState<TaskFilter>("today");
-  const [scope, setScope] = useState<ScopeOption>("mine");
+  const [ownerId, setOwnerId] = useState(currentSpecialistId);
 
   const scoped = useMemo(() => {
-    if (scope === "mine") return tasks.filter((t) => t.assignedTo.id === currentSpecialistId);
-    return tasks;
-  }, [tasks, scope]);
+    if (ownerId === UNASSIGNED) return tasks.filter((task) => task.status === "Open" && !task.assignedTo.id);
+    if (ownerId !== ALL_PEOPLE) return tasks.filter((task) => task.status === "Open" && task.assignedTo.id === ownerId);
+    return tasks.filter((task) => task.status === "Open");
+  }, [tasks, ownerId]);
 
   const filtered = useMemo(() => filterTasks(scoped, filter), [scoped, filter]);
 
-  const myTasks = useMemo(() => tasks.filter((t) => t.assignedTo.id === currentSpecialistId), [tasks, currentSpecialistId]);
+  const myTasks = useMemo(() => tasks.filter((t) => t.status === "Open" && t.assignedTo.id === currentSpecialistId), [tasks, currentSpecialistId]);
   const myOverdueCount = useMemo(() => myTasks.filter((t) => t.dueDate && isOverdue(t.dueDate) && !isToday(t.dueDate)).length, [myTasks]);
 
   const counts = useMemo(() => {
-    const c: Record<string, number> = { all: scoped.length };
+    const openScoped = scoped.filter((task) => task.status === "Open");
+    const c: Record<string, number> = { all: openScoped.length };
     c.overdue = scoped.filter((t) => t.dueDate && isOverdue(t.dueDate) && !isToday(t.dueDate)).length;
     c.today = scoped.filter((t) => t.dueDate && isToday(t.dueDate)).length;
     c.tomorrow = scoped.filter((t) => t.dueDate && isTomorrow(t.dueDate)).length;
@@ -56,11 +61,18 @@ export function TaskList({ tasks, fileMap, currentSpecialistId }: { tasks: Task[
       <Box sx={{ display: "flex", gap: 2, mb: 2, alignItems: "center" }}>
         <FormControl size="small" sx={{ minWidth: 170 }}>
           <Select
-            value={scope}
-            onChange={(e) => setScope(e.target.value as ScopeOption)}
+            value={ownerId || ALL_PEOPLE}
+            onChange={(e) => setOwnerId(e.target.value)}
+            renderValue={(selected) => {
+              const owner = SALESFORCE_OWNERS.find((item) => item.Id === selected);
+              const label = owner?.Name ?? (selected === UNASSIGNED ? "Unassigned" : "Everyone");
+              return <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}><Avatar sx={{ width: 24, height: 24, fontSize: "0.6rem", bgcolor: owner ? colorFromString(owner.Id) : selected === UNASSIGNED ? "grey.400" : "primary.main" }}>{getInitials(selected === currentSpecialistId ? "Me" : label)}</Avatar>{selected === currentSpecialistId ? "Me" : label}</Box>;
+            }}
           >
-            <MenuItem value="mine">Assigned to Me</MenuItem>
-            <MenuItem value="all">All Tasks</MenuItem>
+            <MenuItem value={currentSpecialistId || ALL_PEOPLE}><Avatar sx={{ width: 24, height: 24, mr: 1, fontSize: "0.6rem", bgcolor: colorFromString(currentSpecialistId) }}>{getInitials("Me")}</Avatar>Me</MenuItem>
+            {SALESFORCE_OWNERS.filter((owner) => owner.Id !== currentSpecialistId).map((owner) => <MenuItem key={owner.Id} value={owner.Id}><Avatar sx={{ width: 24, height: 24, mr: 1, fontSize: "0.6rem", bgcolor: colorFromString(owner.Id) }}>{getInitials(owner.Name)}</Avatar>{owner.Name}</MenuItem>)}
+            <MenuItem value={UNASSIGNED}>Unassigned</MenuItem>
+            <MenuItem value={ALL_PEOPLE}>Everyone</MenuItem>
           </Select>
         </FormControl>
         <FormControl size="small" sx={{ minWidth: 200 }}>
@@ -81,7 +93,7 @@ export function TaskList({ tasks, fileMap, currentSpecialistId }: { tasks: Task[
             color="error"
             size="small"
             clickable
-            onClick={() => { setScope("mine"); setFilter("overdue"); }}
+            onClick={() => { setOwnerId(currentSpecialistId); setFilter("overdue"); }}
             sx={{ fontWeight: 500 }}
           />
         )}
