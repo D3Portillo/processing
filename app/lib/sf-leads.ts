@@ -1,4 +1,4 @@
-import { sfQuery } from "./sf"
+import { getToken, sfQuery } from "./sf"
 import owners from "@/data/salesforce-owners.json"
 
 export interface SalesforceOwner {
@@ -29,9 +29,20 @@ export interface SalesforceLead {
   Lender__c: string | null
   QWR_RMA_Lender_Phone_Number__c: string | null
   Underwriting_Lender_Phone_Number__c: string | null
+  Last_Status_Update__c: string | null
   Next_Status_Update__c: string | null
   Last_Lender_Call__c: string | null
   Sale_Date_On_Property__c: string | null
+  ProcessingStartDate: string | null
+}
+
+export interface SalesforceLeadHistory {
+  Id: string
+  LeadId: string
+  Field: string
+  OldValue: string | null
+  NewValue: string | null
+  CreatedDate: string
 }
 
 const ACTIVE_LEAD_STATUSES = [
@@ -61,11 +72,17 @@ const STATUS_LIST = ACTIVE_LEAD_STATUSES.map((status) => `'${status}'`).join(
 )
 
 export const ACTIVE_LEADS_QUERY = `
-SELECT Email, OwnerId, Phone, LastModifiedDate, CreatedDate, Loan_Number__c, What_type_of_loan_do_they_have__c, Id, Name, Status, Lender__c, QWR_RMA_Lender_Phone_Number__c, Underwriting_Lender_Phone_Number__c, Next_Status_Update__c, Last_Lender_Call__c, Sale_Date_On_Property__c
+SELECT Email, OwnerId, Phone, LastModifiedDate, CreatedDate, Loan_Number__c, What_type_of_loan_do_they_have__c, Id, Name, Status, Lender__c, QWR_RMA_Lender_Phone_Number__c, Underwriting_Lender_Phone_Number__c, Last_Status_Update__c, Next_Status_Update__c, Last_Lender_Call__c, Sale_Date_On_Property__c
 FROM Lead
 WHERE Status IN (${STATUS_LIST})
 AND CreatedDate = THIS_YEAR
 AND OwnerId != '005Pm000003PUveIAG'
+ORDER BY LastModifiedDate DESC`
+
+export const PROCESSING_LEAD_HISTORY_QUERY = `
+SELECT Id, LeadId, Field, OldValue, NewValue, CreatedDate
+FROM LeadHistory
+WHERE Field = 'Status'
 ORDER BY CreatedDate DESC`
 
 function normalizeLead(lead: SalesforceLead): SalesforceLead {
@@ -76,8 +93,19 @@ function normalizeLead(lead: SalesforceLead): SalesforceLead {
 }
 
 export async function getActiveLeads(): Promise<SalesforceLead[]> {
-  const leads = await sfQuery<SalesforceLead>(ACTIVE_LEADS_QUERY)
-  return leads.map(normalizeLead)
+  const token = await getToken()
+  const [leads, history] = await Promise.all([
+    sfQuery<SalesforceLead>(ACTIVE_LEADS_QUERY, token),
+    getProcessingLeadHistory(token),
+  ])
+  const processingDates = getLatestProcessingDates(history)
+
+  return leads.map((lead) =>
+    normalizeLead({
+      ...lead,
+      ProcessingStartDate: processingDates.get(lead.Id) ?? null,
+    }),
+  )
 }
 
 export async function getActiveLeadOwners(): Promise<SalesforceOwner[]> {
@@ -86,4 +114,31 @@ SELECT Id, Name, Email
 FROM User
 WHERE IsActive = true
 ORDER BY Name`)
+}
+
+export async function getProcessingLeadHistory(
+  token?: string,
+): Promise<SalesforceLeadHistory[]> {
+  const history = await sfQuery<SalesforceLeadHistory>(
+    PROCESSING_LEAD_HISTORY_QUERY,
+    token,
+  )
+
+  return history.filter((entry) => entry.NewValue === "Processing")
+}
+
+function getLatestProcessingDates(
+  history: SalesforceLeadHistory[],
+): Map<string, string> {
+  const dates = new Map<string, string>()
+
+  for (const entry of history) {
+    const previousDate = dates.get(entry.LeadId)
+
+    if (!previousDate || entry.CreatedDate > previousDate) {
+      dates.set(entry.LeadId, entry.CreatedDate)
+    }
+  }
+
+  return dates
 }

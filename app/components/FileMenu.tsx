@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button, Menu, MenuItem, ListItemIcon, ListItemText, Divider } from "@mui/material";
 import { ChevronDown, ArrowRight, Mail, MessageSquare, RefreshCw } from "lucide-react";
-import { updateFileStage, useStore } from "@/app/lib/mock-data";
+import { updateFileStage, useStore } from "@/app/lib/ui-actions";
 import type { Stage } from "@/app/lib/types";
 import { STAGES } from "@/app/lib/types";
 

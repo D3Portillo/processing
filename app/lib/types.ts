@@ -83,6 +83,7 @@ export interface MortgageFile {
   stage: Stage
   saleDate: string | null
   createdAt: string
+  assignedAt: string
   updatedAt: string
   nextStatusUpdate?: string | null
   lastLenderCall?: string | null

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Box, Avatar, Select, MenuItem, FormControl, Typography } from "@mui/material";
 import { getInitials } from "@/app/lib/utils";
-import { assignFile, useStore } from "@/app/lib/mock-data";
+import { assignFile, useStore } from "@/app/lib/ui-actions";
 import type { Specialist } from "@/app/lib/types";
 
 const UNASSIGNED_ID = "__unassigned__";

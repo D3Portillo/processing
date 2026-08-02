@@ -1,23 +1,19 @@
-"use client";
+"use client"
 
-import { Checkbox } from "@mui/material";
-import { completeTask, useStore } from "@/app/lib/mock-data";
-import type { Task } from "@/app/lib/types";
+import { useState } from "react"
+import { Checkbox } from "@mui/material"
+import type { Task } from "@/app/lib/types"
 
-export function CompleteTaskButton({ task, actorId }: { task: Task; actorId: string }) {
-  useStore();
-  const done = task.status === "Completed";
+export function CompleteTaskButton({ task }: { task: Task; actorId: string }) {
+  const [done, setDone] = useState(task.status === "Completed")
 
   return (
     <Checkbox
       checked={done}
       disabled={done}
       size="small"
-      onChange={() => {
-        if (done) return;
-        completeTask(task.id, actorId);
-      }}
+      onChange={() => setDone(true)}
       sx={{ p: 0.5 }}
     />
-  );
+  )
 }

@@ -64,7 +64,7 @@ function task(
     assignedTo,
     dueDate: input.dueDate,
     status: input.status,
-    createdAt: lead.CreatedDate,
+    createdAt: lead.ProcessingStartDate ?? lead.CreatedDate,
     completedAt: input.completedAt,
   }
 }
@@ -73,20 +73,21 @@ export function deriveLeadTasks(
   lead: SalesforceLead,
   assignedTo: Specialist,
 ): Task[] {
+  const assignedAt = lead.ProcessingStartDate ?? lead.CreatedDate
   const welcomeComplete = WELCOME_COMPLETE_STATUSES.has(lead.Status)
   const welcomeCompletedAt = welcomeComplete ? lead.LastModifiedDate : null
   const tasks = [
     task(lead, assignedTo, {
       id: "welcome-email",
       title: "Welcome Email",
-      dueDate: lead.CreatedDate,
+      dueDate: assignedAt,
       status: welcomeComplete ? "Completed" : "Open",
       completedAt: welcomeCompletedAt,
     }),
     task(lead, assignedTo, {
       id: "welcome-call",
       title: "Welcome Call",
-      dueDate: addDays(lead.CreatedDate, 1),
+      dueDate: addDays(assignedAt, 1),
       status: welcomeComplete ? "Completed" : "Open",
       completedAt: welcomeCompletedAt,
     }),

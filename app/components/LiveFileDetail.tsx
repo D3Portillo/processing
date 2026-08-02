@@ -280,6 +280,12 @@ export function LiveFileDetail() {
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
             <Clock size={12} />
             <Typography variant="caption" color="text.secondary">
+              Assigned {formatDate(file.assignedAt)}
+            </Typography>
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+            <Clock size={12} />
+            <Typography variant="caption" color="text.secondary">
               Updated {formatRelative(file.updatedAt)}
             </Typography>
           </Box>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button, TextField, Stack } from "@mui/material";
 import { Plus } from "lucide-react";
-import { addNote, useStore } from "@/app/lib/mock-data";
+import { addNote, useStore } from "@/app/lib/ui-actions";
 
 export function AddNoteForm({ fileId, authorId }: { fileId: string; authorId: string }) {
   useStore();
