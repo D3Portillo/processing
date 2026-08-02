@@ -24,14 +24,6 @@ const WELCOME_COMPLETE_STATUSES = new Set([
   "Non-Payment",
   "Closed",
 ])
-const FOLLOW_UP_STATUSES = new Set([
-  "TPA PENDING",
-  "SUB PENDING",
-  "W.E. SENT",
-  "UNDERWRITING",
-  "Missing Documents",
-  "Escalation",
-])
 
 function addDays(value: string, days: number): string {
   const date = new Date(value)
@@ -64,7 +56,7 @@ function task(
     assignedTo,
     dueDate: input.dueDate,
     status: input.status,
-    createdAt: lead.ProcessingStartDate ?? lead.CreatedDate,
+    createdAt: lead.ProcessingStartDate,
     completedAt: input.completedAt,
   }
 }
@@ -73,46 +65,78 @@ export function deriveLeadTasks(
   lead: SalesforceLead,
   assignedTo: Specialist,
 ): Task[] {
-  const assignedAt = lead.ProcessingStartDate ?? lead.CreatedDate
+  const assignedAt = lead.ProcessingStartDate
   const welcomeComplete = WELCOME_COMPLETE_STATUSES.has(lead.Status)
-  const welcomeCompletedAt = welcomeComplete ? lead.LastModifiedDate : null
-  const tasks = [
+  const lastLenderCall = toDate(lead.Last_Lender_Call__c)
+  const lastStatusUpdate = toDate(lead.Last_Status_Update__c)
+  const nextStatusUpdate = toDate(lead.Next_Status_Update__c)
+
+  const tasks: Task[] = [
     task(lead, assignedTo, {
       id: "welcome-email",
       title: "Welcome Email",
-      dueDate: assignedAt,
+      dueDate: addDays(assignedAt, 1),
       status: welcomeComplete ? "Completed" : "Open",
-      completedAt: welcomeCompletedAt,
+      completedAt: welcomeComplete ? addDays(assignedAt, 1) : null,
     }),
     task(lead, assignedTo, {
       id: "welcome-call",
       title: "Welcome Call",
-      dueDate: addDays(assignedAt, 1),
+      dueDate: addDays(assignedAt, 2),
       status: welcomeComplete ? "Completed" : "Open",
-      completedAt: welcomeCompletedAt,
+      completedAt: welcomeComplete ? addDays(assignedAt, 2) : null,
     }),
   ]
 
-  if (FOLLOW_UP_STATUSES.has(lead.Status)) {
-    const followUpBase =
-      toDate(lead.Last_Lender_Call__c) ?? toDate(lead.Next_Status_Update__c)
-    tasks.push(
-      task(lead, assignedTo, {
-        id: "lender-follow-up",
-        title: "7 Day Follow Up: Call Lender",
-        dueDate: followUpBase ? addDays(followUpBase, 7) : null,
-        status: "Open",
-        completedAt: null,
-      }),
-      task(lead, assignedTo, {
-        id: "borrower-follow-up",
-        title: "7 Day Follow Up: Call Borrower",
-        dueDate: followUpBase ? addDays(followUpBase, 7) : null,
-        status: "Open",
-        completedAt: null,
-      }),
-    )
-  }
+  tasks.push(
+    // First Follow Up
+    task(lead, assignedTo, {
+      id: "lender-follow-up-1",
+      title: "7 Day Follow Up: Call Lender (1)",
+      dueDate: lastLenderCall,
+      status: "Open",
+      completedAt: lastLenderCall,
+    }),
+    task(lead, assignedTo, {
+      id: "borrower-follow-up-1",
+      title: "7 Day Follow Up: Call Borrower (1)",
+      dueDate: lastStatusUpdate,
+      status: "Open",
+      completedAt: null,
+    }),
+
+    // Second Follow Up
+    task(lead, assignedTo, {
+      id: "lender-follow-up-2",
+      title: "7 Day Follow Up: Call Lender (2)",
+      dueDate: lastLenderCall ? addDays(lastLenderCall, 7) : null,
+      status: "Open",
+      completedAt: null,
+    }),
+    task(lead, assignedTo, {
+      id: "borrower-follow-up-2",
+      title: "7 Day Follow Up: Call Borrower (2)",
+      dueDate: lastStatusUpdate ? addDays(lastStatusUpdate, 7) : null,
+      status: "Open",
+      completedAt: null,
+    }),
+
+    // Third Follow Up
+    task(lead, assignedTo, {
+      id: "lender-follow-up-3",
+      title: "7 Day Follow Up: Call Lender (3)",
+      dueDate: lastLenderCall ? addDays(lastLenderCall, 14) : null,
+      status: "Open",
+      completedAt: null,
+    }),
+    task(lead, assignedTo, {
+      id: "borrower-follow-up-3",
+      title: "7 Day Follow Up: Call Borrower (3)",
+      dueDate: lastStatusUpdate ? addDays(lastStatusUpdate, 14) : null,
+      status: "Open",
+      completedAt: null,
+    }),
+  )
 
   return tasks
 }

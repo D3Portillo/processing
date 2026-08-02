@@ -33,7 +33,7 @@ export interface SalesforceLead {
   Next_Status_Update__c: string | null
   Last_Lender_Call__c: string | null
   Sale_Date_On_Property__c: string | null
-  ProcessingStartDate: string | null
+  ProcessingStartDate: string
 }
 
 export interface SalesforceLeadHistory {
@@ -45,38 +45,10 @@ export interface SalesforceLeadHistory {
   CreatedDate: string
 }
 
-const ACTIVE_LEAD_STATUSES = [
-  "Processing",
-  "W.E. SENT",
-  "W.C. Complete",
-  "TPA PENDING",
-  "SUB PENDING",
-  "QWR/RMA",
-  "QWR ONLY",
-  "Missing Documents",
-  "UNDERWRITING",
-  "Escalation",
-  "Approved Pending Docs",
-  "APPROVED",
-  "DENIED",
-  "Non-Compliance",
-  "BK",
-  "Qualified",
-  "Refunded",
-  "Non-Payment",
-  "Closed",
-] as const
-
-const STATUS_LIST = ACTIVE_LEAD_STATUSES.map((status) => `'${status}'`).join(
-  ", ",
-)
-
 export const ACTIVE_LEADS_QUERY = `
 SELECT Email, OwnerId, Phone, LastModifiedDate, CreatedDate, Loan_Number__c, What_type_of_loan_do_they_have__c, Id, Name, Status, Lender__c, QWR_RMA_Lender_Phone_Number__c, Underwriting_Lender_Phone_Number__c, Last_Status_Update__c, Next_Status_Update__c, Last_Lender_Call__c, Sale_Date_On_Property__c
 FROM Lead
-WHERE Status IN (${STATUS_LIST})
-AND CreatedDate = THIS_YEAR
-AND OwnerId != '005Pm000003PUveIAG'
+WHERE OwnerId IN (${PROCESSING_TEAM.map((u) => `'${u.Id}'`).join(",")})
 ORDER BY LastModifiedDate DESC`
 
 export const PROCESSING_LEAD_HISTORY_QUERY = `
@@ -95,17 +67,31 @@ function normalizeLead(lead: SalesforceLead): SalesforceLead {
 export async function getActiveLeads(): Promise<SalesforceLead[]> {
   const token = await getToken()
   const [leads, history] = await Promise.all([
-    sfQuery<SalesforceLead>(ACTIVE_LEADS_QUERY, token),
+    sfQuery<Omit<SalesforceLead, "ProcessingStartDate">>(
+      ACTIVE_LEADS_QUERY,
+      token,
+    ),
     getProcessingLeadHistory(token),
   ])
   const processingDates = getLatestProcessingDates(history)
 
-  return leads.map((lead) =>
-    normalizeLead({
-      ...lead,
-      ProcessingStartDate: processingDates.get(lead.Id) ?? null,
-    }),
-  )
+  console.debug({
+    totalLeads: leads.length,
+    totalHistory: history.length,
+    totalProcessingDates: processingDates.size,
+  })
+
+  return leads
+    .map((lead) => {
+      const processingStartDate = processingDates.get(lead.Id)
+      if (!processingStartDate) return null
+
+      return normalizeLead({
+        ...lead,
+        ProcessingStartDate: processingStartDate,
+      })
+    })
+    .filter((lead): lead is SalesforceLead => lead !== null)
 }
 
 export async function getActiveLeadOwners(): Promise<SalesforceOwner[]> {
@@ -123,7 +109,6 @@ export async function getProcessingLeadHistory(
     PROCESSING_LEAD_HISTORY_QUERY,
     token,
   )
-
   return history.filter((entry) => entry.NewValue === "Processing")
 }
 
@@ -134,8 +119,8 @@ function getLatestProcessingDates(
 
   for (const entry of history) {
     const previousDate = dates.get(entry.LeadId)
-
-    if (!previousDate || entry.CreatedDate > previousDate) {
+    // Get latest processing date for each lead, since the history is sorted by CreatedDate DESC.
+    if (!previousDate) {
       dates.set(entry.LeadId, entry.CreatedDate)
     }
   }
