@@ -84,6 +84,7 @@ export interface MortgageFile {
   saleDate: string | null
   createdAt: string
   assignedAt: string
+  underwritingStartDate: string | null
   updatedAt: string
   nextStatusUpdate?: string | null
   lastLenderCall?: string | null

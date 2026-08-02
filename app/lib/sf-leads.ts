@@ -34,6 +34,7 @@ export interface SalesforceLead {
   Last_Lender_Call__c: string | null
   Sale_Date_On_Property__c: string | null
   ProcessingStartDate: string
+  UnderwritingStartDate: string | null
 }
 
 export interface SalesforceLeadHistory {
@@ -67,18 +68,19 @@ function normalizeLead(lead: SalesforceLead): SalesforceLead {
 export async function getActiveLeads(): Promise<SalesforceLead[]> {
   const token = await getToken()
   const [leads, history] = await Promise.all([
-    sfQuery<Omit<SalesforceLead, "ProcessingStartDate">>(
-      ACTIVE_LEADS_QUERY,
-      token,
-    ),
+    sfQuery<
+      Omit<SalesforceLead, "ProcessingStartDate" | "UnderwritingStartDate">
+    >(ACTIVE_LEADS_QUERY, token),
     getProcessingLeadHistory(token),
   ])
-  const processingDates = getLatestProcessingDates(history)
+  const processingDates = getLatestStatusDates(history, "Processing")
+  const underwritingDates = getLatestStatusDates(history, "UNDERWRITING")
 
   console.debug({
     totalLeads: leads.length,
     totalHistory: history.length,
     totalProcessingDates: processingDates.size,
+    totalUnderwritingDates: underwritingDates.size,
   })
 
   return leads
@@ -89,6 +91,7 @@ export async function getActiveLeads(): Promise<SalesforceLead[]> {
       return normalizeLead({
         ...lead,
         ProcessingStartDate: processingStartDate,
+        UnderwritingStartDate: underwritingDates.get(lead.Id) ?? null,
       })
     })
     .filter((lead): lead is SalesforceLead => lead !== null)
@@ -109,17 +112,21 @@ export async function getProcessingLeadHistory(
     PROCESSING_LEAD_HISTORY_QUERY,
     token,
   )
-  return history.filter((entry) => entry.NewValue === "Processing")
+  return history
 }
 
-function getLatestProcessingDates(
+function getLatestStatusDates(
   history: SalesforceLeadHistory[],
+  status: string,
 ): Map<string, string> {
   const dates = new Map<string, string>()
 
   for (const entry of history) {
+    if (entry.NewValue !== status) continue
+
     const previousDate = dates.get(entry.LeadId)
-    // Get latest processing date for each lead, since the history is sorted by CreatedDate DESC.
+    // History is sorted by CreatedDate DESC, so the first matching entry is
+    // the latest time the lead entered this status.
     if (!previousDate) {
       dates.set(entry.LeadId, entry.CreatedDate)
     }

@@ -94,6 +94,7 @@ export function mapLeadToMortgageFile(lead: SalesforceLead): MortgageFile {
     saleDate: toIsoDate(saleDate),
     createdAt: lead.CreatedDate,
     assignedAt: lead.ProcessingStartDate,
+    underwritingStartDate: lead.UnderwritingStartDate,
     updatedAt: lead.LastModifiedDate,
     nextStatusUpdate: lead.Next_Status_Update__c,
     lastLenderCall: lead.Last_Lender_Call__c,
