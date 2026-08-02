@@ -71,36 +71,42 @@ export function deriveLeadTasks(
   const lastStatusUpdate = toDate(lead.Last_Status_Update__c)
   const nextStatusUpdate = toDate(lead.Next_Status_Update__c)
 
+  const dueDateWelcomeEmail = addDays(assignedAt, 1)
+  const dueDateWelcomeCall = addDays(assignedAt, 2)
+
   const tasks: Task[] = [
     task(lead, assignedTo, {
       id: "welcome-email",
       title: "Welcome Email",
-      dueDate: addDays(assignedAt, 1),
+      dueDate: dueDateWelcomeEmail,
       status: welcomeComplete ? "Completed" : "Open",
-      completedAt: welcomeComplete ? addDays(assignedAt, 1) : null,
+      completedAt: welcomeComplete ? dueDateWelcomeEmail : null,
     }),
     task(lead, assignedTo, {
       id: "welcome-call",
       title: "Welcome Call",
-      dueDate: addDays(assignedAt, 2),
+      dueDate: dueDateWelcomeCall,
       status: welcomeComplete ? "Completed" : "Open",
-      completedAt: welcomeComplete ? addDays(assignedAt, 2) : null,
+      completedAt: welcomeComplete ? dueDateWelcomeCall : null,
     }),
   ]
 
+  const followUpStartDate = addDays(dueDateWelcomeCall, 7)
+
+  // Initial 7 day follow-ups (x3)
   tasks.push(
     // First Follow Up
     task(lead, assignedTo, {
       id: "lender-follow-up-1",
       title: "7 Day Follow Up: Call Lender (1)",
-      dueDate: lastLenderCall,
+      dueDate: followUpStartDate,
       status: "Open",
-      completedAt: lastLenderCall,
+      completedAt: null,
     }),
     task(lead, assignedTo, {
       id: "borrower-follow-up-1",
       title: "7 Day Follow Up: Call Borrower (1)",
-      dueDate: lastStatusUpdate,
+      dueDate: followUpStartDate,
       status: "Open",
       completedAt: null,
     }),
@@ -109,14 +115,14 @@ export function deriveLeadTasks(
     task(lead, assignedTo, {
       id: "lender-follow-up-2",
       title: "7 Day Follow Up: Call Lender (2)",
-      dueDate: lastLenderCall ? addDays(lastLenderCall, 7) : null,
+      dueDate: addDays(followUpStartDate, 7),
       status: "Open",
       completedAt: null,
     }),
     task(lead, assignedTo, {
       id: "borrower-follow-up-2",
       title: "7 Day Follow Up: Call Borrower (2)",
-      dueDate: lastStatusUpdate ? addDays(lastStatusUpdate, 7) : null,
+      dueDate: addDays(followUpStartDate, 7),
       status: "Open",
       completedAt: null,
     }),
@@ -125,14 +131,14 @@ export function deriveLeadTasks(
     task(lead, assignedTo, {
       id: "lender-follow-up-3",
       title: "7 Day Follow Up: Call Lender (3)",
-      dueDate: lastLenderCall ? addDays(lastLenderCall, 14) : null,
+      dueDate: addDays(followUpStartDate, 14),
       status: "Open",
       completedAt: null,
     }),
     task(lead, assignedTo, {
       id: "borrower-follow-up-3",
       title: "7 Day Follow Up: Call Borrower (3)",
-      dueDate: lastStatusUpdate ? addDays(lastStatusUpdate, 14) : null,
+      dueDate: addDays(followUpStartDate, 14),
       status: "Open",
       completedAt: null,
     }),
