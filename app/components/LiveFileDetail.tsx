@@ -17,6 +17,8 @@ import {
 import { Phone, Mail, MapPin, Clock, User } from "lucide-react"
 import { useLeads } from "@/app/hooks/useLeads"
 import { useSalesforceUser } from "@/app/hooks/useSalesforceUser"
+import { useLeadHistory } from "@/app/hooks/useLeadHistory"
+import type { LeadHistoryEntry } from "@/app/hooks/useLeadHistory"
 import { mapLeadToMortgageFile } from "@/app/lib/lead-mapper"
 import { deriveLeadTasks } from "@/app/lib/lead-tasks"
 import { Nav } from "@/app/components/Nav"
@@ -32,11 +34,38 @@ import { GeneratedTaskCheckbox } from "@/app/components/GeneratedTaskCheckbox"
 import { useAtomValue } from "jotai"
 import { isTaskCompleted, taskCompletionsAtom } from "@/app/lib/task-state"
 
+function capitalize(value: string): string {
+  return value ? value.charAt(0).toUpperCase() + value.slice(1) : value
+}
+
+// Title: "Status" or "Status Assigned" (when old is empty, new exists)
+function fieldTitle(entry: LeadHistoryEntry): string {
+  const field = capitalize(entry.Field.replace(/__c$/, ""))
+  const oldEmpty = !entry.OldValue || entry.OldValue === ""
+  const newEmpty = !entry.NewValue || entry.NewValue === ""
+
+  if (oldEmpty && !newEmpty) return `${field} Assigned`
+  return field
+}
+
+// Subtitle: the change description. Empty string = don't render subtitle.
+function describeChange(entry: LeadHistoryEntry): string {
+  const oldEmpty = !entry.OldValue || entry.OldValue === ""
+  const newEmpty = !entry.NewValue || entry.NewValue === ""
+
+  if (oldEmpty && newEmpty) return ""
+  if (oldEmpty && !newEmpty) return entry.NewValue ?? ""
+  return `${entry.OldValue} → ${entry.NewValue}`
+}
+
 export function LiveFileDetail() {
   const params = useParams<{ fileId: string }>()
   const { data: leads, error, isLoading } = useLeads()
   const { data: connectedUser } = useSalesforceUser()
   const completions = useAtomValue(taskCompletionsAtom)
+  const { data: history, isLoading: historyLoading } = useLeadHistory(
+    leads?.find((item) => item.Id === params.fileId)?.Id ?? null,
+  )
 
   if (isLoading) {
     return (
@@ -74,7 +103,13 @@ export function LiveFileDetail() {
   const openTasks = generatedTasks.filter(
     (task) => !isTaskCompleted(task.id, task.status, completions),
   )
-  const taskCounts = { tasks: openTasks.length, timeline: 0, notes: 0, documents: 0 }
+  const allHistory = history ?? []
+  const taskCounts = {
+    tasks: openTasks.length,
+    timeline: allHistory.length,
+    notes: 0,
+    documents: 0,
+  }
 
   return (
     <Box>
@@ -240,12 +275,48 @@ export function LiveFileDetail() {
           </Card>
           <Card variant="outlined">
             <CardContent>
-              <Typography
-                color="text.secondary"
-                sx={{ textAlign: "center", py: 4 }}
-              >
-                No timeline events from Salesforce yet.
-              </Typography>
+              {historyLoading ? (
+                <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+                  <CircularProgress size={24} />
+                </Box>
+              ) : allHistory.length > 0 ? (
+                <Box sx={{ display: "flex", flexDirection: "column" }}>
+                  {allHistory.map((entry, i) => (
+                    <Box
+                      key={entry.Id}
+                      sx={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: 1.5,
+                        py: 1,
+                        borderBottom: i < allHistory.length - 1 ? 1 : 0,
+                        borderColor: "divider",
+                      }}
+                    >
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          {fieldTitle(entry)}
+                        </Typography>
+                        {describeChange(entry) && (
+                          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
+                            {describeChange(entry)}
+                          </Typography>
+                        )}
+                        <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
+                          {formatDate(entry.CreatedDate)}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+              ) : (
+                <Typography
+                  color="text.secondary"
+                  sx={{ textAlign: "center", py: 4 }}
+                >
+                  No timeline events from Salesforce yet.
+                </Typography>
+              )}
             </CardContent>
           </Card>
           <Card variant="outlined">
