@@ -48,14 +48,24 @@ function fieldTitle(entry: LeadHistoryEntry): string {
   return field
 }
 
+// Resolves a Salesforce user ID (starts with 005) to the owner's name.
+function resolveValue(value: string | null): string {
+  if (!value) return ""
+  if (value.startsWith("005")) {
+    const owner = ALL_USERS.find((o) => o.Id === value)
+    if (owner) return owner.Name
+  }
+  return value
+}
+
 // Subtitle: the change description. Empty string = don't render subtitle.
 function describeChange(entry: LeadHistoryEntry): string {
   const oldEmpty = !entry.OldValue || entry.OldValue === ""
   const newEmpty = !entry.NewValue || entry.NewValue === ""
 
   if (oldEmpty && newEmpty) return ""
-  if (oldEmpty && !newEmpty) return entry.NewValue ?? ""
-  return `${entry.OldValue} → ${entry.NewValue}`
+  if (oldEmpty && !newEmpty) return resolveValue(entry.NewValue)
+  return `${resolveValue(entry.OldValue)} → ${resolveValue(entry.NewValue)}`
 }
 
 export function LiveFileDetail() {
