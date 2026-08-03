@@ -35,6 +35,9 @@ export interface SalesforceLead {
   Sale_Date_On_Property__c: string | null
   ProcessingStartDate: string
   UnderwritingStartDate: string | null
+  UnderwritingEndDate: string | null
+  MissingDocsDate: string | null
+  HaltedDate: string | null
 }
 
 export interface SalesforceLeadHistory {
@@ -58,6 +61,16 @@ FROM LeadHistory
 WHERE Field = 'Status'
 ORDER BY CreatedDate DESC`
 
+// Terminal statuses — dead ends where follow-ups should stop
+const HALTED_STATUSES = new Set([
+  "DENIED",
+  "UNRSPSV",
+  "Unqualified",
+  "Non-Payment",
+  "Closed",
+  "Refunded",
+])
+
 function normalizeLead(lead: SalesforceLead): SalesforceLead {
   return {
     ...lead,
@@ -69,18 +82,24 @@ export async function getActiveLeads(): Promise<SalesforceLead[]> {
   const token = await getToken()
   const [leads, history] = await Promise.all([
     sfQuery<
-      Omit<SalesforceLead, "ProcessingStartDate" | "UnderwritingStartDate">
+      Omit<SalesforceLead, "ProcessingStartDate" | "UnderwritingStartDate" | "UnderwritingEndDate" | "MissingDocsDate" | "HaltedDate">
     >(ACTIVE_LEADS_QUERY, token),
     getProcessingLeadHistory(token),
   ])
   const processingDates = getLatestStatusDates(history, "Processing")
-  const underwritingDates = getLatestStatusDates(history, "UNDERWRITING")
+  const underwritingStartDates = getLatestStatusDates(history, "UNDERWRITING")
+  const underwritingEndDates = getLatestStatusExitDates(history, "UNDERWRITING")
+  const missingDocsDates = getLatestStatusDates(history, "Missing Documents")
+  const haltedDates = getLatestStatusInSetDates(history, HALTED_STATUSES)
 
   console.debug({
     totalLeads: leads.length,
     totalHistory: history.length,
     totalProcessingDates: processingDates.size,
-    totalUnderwritingDates: underwritingDates.size,
+    totalUnderwritingStartDates: underwritingStartDates.size,
+    totalUnderwritingEndDates: underwritingEndDates.size,
+    totalMissingDocsDates: missingDocsDates.size,
+    totalHaltedDates: haltedDates.size,
   })
 
   return leads
@@ -91,7 +110,10 @@ export async function getActiveLeads(): Promise<SalesforceLead[]> {
       return normalizeLead({
         ...lead,
         ProcessingStartDate: processingStartDate,
-        UnderwritingStartDate: underwritingDates.get(lead.Id) ?? null,
+        UnderwritingStartDate: underwritingStartDates.get(lead.Id) ?? null,
+        UnderwritingEndDate: underwritingEndDates.get(lead.Id) ?? null,
+        MissingDocsDate: missingDocsDates.get(lead.Id) ?? null,
+        HaltedDate: haltedDates.get(lead.Id) ?? null,
       })
     })
     .filter((lead): lead is SalesforceLead => lead !== null)
@@ -124,10 +146,49 @@ function getLatestStatusDates(
   for (const entry of history) {
     if (entry.NewValue !== status) continue
 
-    const previousDate = dates.get(entry.LeadId)
-    // History is sorted by CreatedDate DESC, so the first matching entry is
-    // the latest time the lead entered this status.
-    if (!previousDate) {
+    // History is sorted by CreatedDate DESC, so the first matching entry
+    // is the latest time the lead entered this status.
+    if (!dates.has(entry.LeadId)) {
+      dates.set(entry.LeadId, entry.CreatedDate)
+    }
+  }
+
+  return dates
+}
+
+// Finds the most recent date a lead EXITED the given status — i.e. the
+// lead's status changed FROM `status` to something else. History is sorted
+// by CreatedDate DESC, so the first matching entry is the latest exit.
+function getLatestStatusExitDates(
+  history: SalesforceLeadHistory[],
+  status: string,
+): Map<string, string> {
+  const dates = new Map<string, string>()
+
+  for (const entry of history) {
+    if (entry.OldValue !== status) continue
+    if (entry.NewValue === status) continue
+
+    if (!dates.has(entry.LeadId)) {
+      dates.set(entry.LeadId, entry.CreatedDate)
+    }
+  }
+
+  return dates
+}
+
+// Finds the most recent date a lead entered ANY status in the given set.
+// History is sorted by CreatedDate DESC, so the first matching entry wins.
+function getLatestStatusInSetDates(
+  history: SalesforceLeadHistory[],
+  statuses: Set<string>,
+): Map<string, string> {
+  const dates = new Map<string, string>()
+
+  for (const entry of history) {
+    if (!entry.NewValue || !statuses.has(entry.NewValue)) continue
+
+    if (!dates.has(entry.LeadId)) {
       dates.set(entry.LeadId, entry.CreatedDate)
     }
   }

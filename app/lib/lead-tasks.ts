@@ -61,15 +61,16 @@ function task(
   }
 }
 
+// Max 7-day follow-up cycles when there's no underwriting start date yet.
+// 13 cycles ≈ 91 days of follow-ups before the lead enters underwriting.
+const MAX_FOLLOW_UP_CYCLES = 13
+
 export function deriveLeadTasks(
   lead: SalesforceLead,
   assignedTo: Specialist,
 ): Task[] {
   const assignedAt = lead.ProcessingStartDate
   const welcomeComplete = WELCOME_COMPLETE_STATUSES.has(lead.Status)
-  const lastLenderCall = toDate(lead.Last_Lender_Call__c)
-  const lastStatusUpdate = toDate(lead.Last_Status_Update__c)
-  const nextStatusUpdate = toDate(lead.Next_Status_Update__c)
 
   const dueDateWelcomeEmail = addDays(assignedAt, 1)
   const dueDateWelcomeCall = addDays(assignedAt, 2)
@@ -91,60 +92,97 @@ export function deriveLeadTasks(
     }),
   ]
 
+  // 7-day follow-ups — repeat every 7 days until:
+  //   - underwriting starts
+  //   - missing documents pause
+  //   - lead is halted (denied, unresponsive, etc)
   const followUpStartDate = addDays(dueDateWelcomeCall, 7)
+  const uwStart = toDate(lead.UnderwritingStartDate)
+  const uwEnd = toDate(lead.UnderwritingEndDate)
+  const missingDocs = toDate(lead.MissingDocsDate)
+  const halted = toDate(lead.HaltedDate)
 
-  // Initial 7 day follow-ups (x3)
-  tasks.push(
-    // First Follow Up
-    task(lead, assignedTo, {
-      id: "lender-follow-up-1",
-      title: "7 Day Follow Up: Call Lender (1)",
-      dueDate: followUpStartDate,
-      status: "Open",
-      completedAt: null,
-    }),
-    task(lead, assignedTo, {
-      id: "borrower-follow-up-1",
-      title: "7 Day Follow Up: Call Borrower (1)",
-      dueDate: followUpStartDate,
-      status: "Open",
-      completedAt: null,
-    }),
+  let cycle = 1
+  let dueDate = followUpStartDate
+  while (cycle <= MAX_FOLLOW_UP_CYCLES) {
+    if (uwStart && dueDate >= uwStart) break
+    if (missingDocs && dueDate >= missingDocs) break
+    if (halted && dueDate >= halted) break
 
-    // Second Follow Up
-    task(lead, assignedTo, {
-      id: "lender-follow-up-2",
-      title: "7 Day Follow Up: Call Lender (2)",
-      dueDate: addDays(followUpStartDate, 7),
-      status: "Open",
-      completedAt: null,
-    }),
-    task(lead, assignedTo, {
-      id: "borrower-follow-up-2",
-      title: "7 Day Follow Up: Call Borrower (2)",
-      dueDate: addDays(followUpStartDate, 7),
-      status: "Open",
-      completedAt: null,
-    }),
+    tasks.push(
+      task(lead, assignedTo, {
+        id: `lender-follow-up-${cycle}`,
+        title: `7 Day Follow Up: Call Lender (${cycle})`,
+        dueDate,
+        status: "Open",
+        completedAt: null,
+      }),
+      task(lead, assignedTo, {
+        id: `borrower-follow-up-${cycle}`,
+        title: `7 Day Follow Up: Call Borrower (${cycle})`,
+        dueDate,
+        status: "Open",
+        completedAt: null,
+      }),
+    )
 
-    // Third Follow Up
-    task(lead, assignedTo, {
-      id: "lender-follow-up-3",
-      title: "7 Day Follow Up: Call Lender (3)",
-      dueDate: addDays(followUpStartDate, 14),
-      status: "Open",
-      completedAt: null,
-    }),
-    task(lead, assignedTo, {
-      id: "borrower-follow-up-3",
-      title: "7 Day Follow Up: Call Borrower (3)",
-      dueDate: addDays(followUpStartDate, 14),
-      status: "Open",
-      completedAt: null,
-    }),
-  )
+    cycle++
+    dueDate = addDays(dueDate, 7)
+  }
 
-  // Add UNDERWRITING follow-up tasks if applicable
+  // 14-day underwriting follow-ups — only while the lead is CURRENTLY in
+  // underwriting. If UnderwritingEndDate exists (status changed away from
+  // UNDERWRITING), no UW follow-ups are generated.
+  if (uwStart && !uwEnd) {
+    const uwCycle1 = addDays(uwStart, 13)
+    const uwCycle2 = addDays(uwStart, 27)
+    const uwCycle3 = addDays(uwStart, 41)
+
+    tasks.push(
+      task(lead, assignedTo, {
+        id: "uw-follow-up-1-lender",
+        title: "14 Day UW Follow Up: Call Lender (1)",
+        dueDate: uwCycle1,
+        status: "Open",
+        completedAt: null,
+      }),
+      task(lead, assignedTo, {
+        id: "uw-follow-up-1-borrower",
+        title: "14 Day UW Follow Up: Call Borrower (1)",
+        dueDate: uwCycle1,
+        status: "Open",
+        completedAt: null,
+      }),
+      task(lead, assignedTo, {
+        id: "uw-follow-up-2-lender",
+        title: "14 Day UW Follow Up: Call Lender (2)",
+        dueDate: uwCycle2,
+        status: "Open",
+        completedAt: null,
+      }),
+      task(lead, assignedTo, {
+        id: "uw-follow-up-2-borrower",
+        title: "14 Day UW Follow Up: Call Borrower (2)",
+        dueDate: uwCycle2,
+        status: "Open",
+        completedAt: null,
+      }),
+      task(lead, assignedTo, {
+        id: "uw-follow-up-3-lender",
+        title: "14 Day UW Follow Up: Call Lender (3)",
+        dueDate: uwCycle3,
+        status: "Open",
+        completedAt: null,
+      }),
+      task(lead, assignedTo, {
+        id: "uw-follow-up-3-borrower",
+        title: "14 Day UW Follow Up: Call Borrower (3)",
+        dueDate: uwCycle3,
+        status: "Open",
+        completedAt: null,
+      }),
+    )
+  }
 
   return tasks
 }
