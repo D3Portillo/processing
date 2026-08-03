@@ -62,13 +62,14 @@ WHERE Field = 'Status'
 ORDER BY CreatedDate DESC`
 
 // Terminal statuses — dead ends where follow-ups should stop
-const HALTED_STATUSES = new Set([
+export const HALTED_STATUSES = new Set([
   "DENIED",
   "UNRSPSV",
   "Unqualified",
   "Non-Payment",
   "Closed",
   "Refunded",
+  "APPROVED",
 ])
 
 function normalizeLead(lead: SalesforceLead): SalesforceLead {

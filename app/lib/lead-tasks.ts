@@ -1,4 +1,5 @@
 import type { SalesforceLead } from "./sf-leads"
+import { HALTED_STATUSES } from "./sf-leads"
 import type { Specialist, Task } from "./types"
 
 const WELCOME_COMPLETE_STATUSES = new Set([
@@ -65,10 +66,35 @@ function task(
 // 13 cycles ≈ 91 days of follow-ups before the lead enters underwriting.
 const MAX_FOLLOW_UP_CYCLES = 13
 
+// For the demo: assume past tasks were done. If the last lender call was
+// 2 days ago, every lender task due on or before that date is completed.
+// Same for borrower tasks vs last status update.
+function applyLastActivity(
+  tasks: Task[],
+  lastLenderCall: string | null,
+  lastStatusUpdate: string | null,
+): Task[] {
+  return tasks.map((t) => {
+    if (t.status === "Completed" || !t.dueDate) return t
+
+    const isLenderTask = t.id.includes("lender")
+    const cutoff = isLenderTask ? lastLenderCall : lastStatusUpdate
+
+    if (cutoff && t.dueDate <= cutoff) {
+      return { ...t, status: "Completed" as const, completedAt: t.dueDate }
+    }
+
+    return t
+  })
+}
+
 export function deriveLeadTasks(
   lead: SalesforceLead,
   assignedTo: Specialist,
 ): Task[] {
+  // Halted leads (denied, closed, unresponsive, etc) show no tasks.
+  if (HALTED_STATUSES.has(lead.Status)) return []
+
   const assignedAt = lead.ProcessingStartDate
   const welcomeComplete = WELCOME_COMPLETE_STATUSES.has(lead.Status)
 
@@ -184,5 +210,10 @@ export function deriveLeadTasks(
     )
   }
 
-  return tasks
+  // Demo: auto-complete past tasks based on last activity dates.
+  // Lender tasks → Last_Lender_Call__c, borrower tasks → Last_Status_Update__c.
+  const lastLenderCall = toDate(lead.Last_Lender_Call__c)
+  const lastStatusUpdate = toDate(lead.Last_Status_Update__c)
+
+  return applyLastActivity(tasks, lastLenderCall, lastStatusUpdate)
 }

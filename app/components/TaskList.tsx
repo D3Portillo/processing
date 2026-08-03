@@ -19,17 +19,26 @@ const FILTER_OPTIONS: { value: TaskFilter; label: string }[] = [
 const ALL_PEOPLE = "all";
 const UNASSIGNED = "unassigned";
 
+function sortByDate(tasks: Task[], dir: "asc" | "desc" = "asc"): Task[] {
+  return [...tasks].sort((a, b) => {
+    if (!a.dueDate) return 1
+    if (!b.dueDate) return -1
+    const cmp = a.dueDate.localeCompare(b.dueDate)
+    return dir === "desc" ? -cmp : cmp
+  })
+}
+
 function filterTasks(tasks: Task[], filter: TaskFilter): Task[] {
   const openTasks = tasks.filter((task) => task.status === "Open")
 
   switch (filter) {
-    case "overdue": return openTasks.filter((t) => t.dueDate && isOverdue(t.dueDate) && !isToday(t.dueDate));
-    case "today": return openTasks.filter((t) => t.dueDate && isToday(t.dueDate));
-    case "tomorrow": return openTasks.filter((t) => t.dueDate && isTomorrow(t.dueDate));
-    case "upcoming": return openTasks.filter((t) => t.dueDate && !isOverdue(t.dueDate) && !isToday(t.dueDate) && !isTomorrow(t.dueDate));
+    case "overdue": return sortByDate(openTasks.filter((t) => t.dueDate && isOverdue(t.dueDate) && !isToday(t.dueDate)), "desc");
+    case "today": return sortByDate(openTasks.filter((t) => t.dueDate && isToday(t.dueDate)));
+    case "tomorrow": return sortByDate(openTasks.filter((t) => t.dueDate && isTomorrow(t.dueDate)));
+    case "upcoming": return sortByDate(openTasks.filter((t) => t.dueDate && !isOverdue(t.dueDate) && !isToday(t.dueDate) && !isTomorrow(t.dueDate)));
     case "all":
     default:
-      return openTasks;
+      return sortByDate(openTasks);
   }
 }
 
