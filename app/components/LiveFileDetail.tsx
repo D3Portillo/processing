@@ -19,6 +19,8 @@ import { useLeads } from "@/app/hooks/useLeads"
 import { useSalesforceUser } from "@/app/hooks/useSalesforceUser"
 import { useTasks } from "@/app/hooks/useTasks"
 import { useLeadMetadata } from "@/app/hooks/useLeadMetadata"
+import { useLeadHistory } from "@/app/hooks/useLeadHistory"
+import type { SalesforceLeadHistory } from "@/app/lib/lead-metadata"
 import { mapLeadToMortgageFile } from "@/app/lib/lead-mapper"
 import { Nav } from "@/app/components/Nav"
 import { FileMenu } from "@/app/components/FileMenu"
@@ -38,6 +40,9 @@ export function LiveFileDetail() {
   const { data: connectedUser } = useSalesforceUser()
   const { data: taskRows, isLoading: tasksLoading } = useTasks(params.fileId)
   const { data: leadMetadata } = useLeadMetadata(params.fileId)
+  const { data: history, isLoading: historyLoading } = useLeadHistory(
+    params.fileId,
+  )
 
   if (isLoading || tasksLoading) {
     return (
@@ -68,7 +73,9 @@ export function LiveFileDetail() {
     avatarColor: colorFromString(owner.Id),
   }))
   const actor = specialists.find(
-    (specialist) => specialist.email.toLowerCase() === connectedUser?.user?.email.toLowerCase(),
+    (specialist) =>
+      specialist.email.toLowerCase() ===
+      connectedUser?.user?.email.toLowerCase(),
   )
   const actorId = actor?.id ?? file.specialist?.id ?? specialists[0]?.id ?? ""
   const ownerMap = new Map(specialists.map((s) => [s.id, s]))
@@ -85,9 +92,10 @@ export function LiveFileDetail() {
     completedAt: row.completed_at,
   }))
   const openTasks = generatedTasks.filter((task) => task.status === "Open")
+  const allHistory = history ?? []
   const taskCounts = {
     tasks: openTasks.length,
-    timeline: 0,
+    timeline: allHistory.length,
     notes: 0,
     documents: 0,
   }
@@ -245,23 +253,69 @@ export function LiveFileDetail() {
           <Card variant="outlined">
             <CardContent>
               {generatedTasks.map((task) => (
-                <Box key={task.id} sx={{ display: "flex", alignItems: "center", gap: 1, py: 1 }}>
+                <Box
+                  key={task.id}
+                  sx={{ display: "flex", alignItems: "center", gap: 1, py: 1 }}
+                >
                   <GeneratedTaskCheckbox task={task} actorId={actorId} />
-                  <Typography sx={{ flex: 1, textDecoration: task.status === "Completed" ? "line-through" : "none", color: task.type === "internal_red_flag" && task.status === "Open" ? "error.main" : "inherit", fontWeight: task.type === "internal_red_flag" && task.status === "Open" ? 600 : 400 }}>{task.title}</Typography>
-                  <Typography variant="caption" color="text.secondary">{task.dueDate ? formatDate(task.dueDate) : "No due date"}</Typography>
+                  <Typography
+                    sx={{
+                      flex: 1,
+                      textDecoration:
+                        task.status === "Completed" ? "line-through" : "none",
+                      color:
+                        task.type === "internal_red_flag" &&
+                        task.status === "Open"
+                          ? "error.main"
+                          : "inherit",
+                      fontWeight:
+                        task.type === "internal_red_flag" &&
+                        task.status === "Open"
+                          ? 600
+                          : 400,
+                    }}
+                  >
+                    {task.title}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {task.dueDate ? formatDate(task.dueDate) : "No due date"}
+                  </Typography>
                 </Box>
               ))}
-              {generatedTasks.length === 0 && <Typography color="text.secondary" sx={{ textAlign: "center", py: 4 }}>No tasks yet.</Typography>}
+              {generatedTasks.length === 0 && (
+                <Typography
+                  color="text.secondary"
+                  sx={{ textAlign: "center", py: 4 }}
+                >
+                  No tasks yet.
+                </Typography>
+              )}
             </CardContent>
           </Card>
           <Card variant="outlined">
             <CardContent>
-              <Typography
-                color="text.secondary"
-                sx={{ textAlign: "center", py: 4 }}
-              >
-                No timeline events yet.
-              </Typography>
+              {historyLoading ? (
+                <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+                  <CircularProgress size={24} />
+                </Box>
+              ) : allHistory.length > 0 ? (
+                <Box sx={{ display: "flex", flexDirection: "column" }}>
+                  {allHistory.map((entry, index) => (
+                    <HistoryItem
+                      key={entry.Id}
+                      entry={entry}
+                      isLast={index === allHistory.length - 1}
+                    />
+                  ))}
+                </Box>
+              ) : (
+                <Typography
+                  color="text.secondary"
+                  sx={{ textAlign: "center", py: 4 }}
+                >
+                  No timeline events yet.
+                </Typography>
+              )}
             </CardContent>
           </Card>
           <Card variant="outlined">
@@ -296,7 +350,8 @@ export function LiveFileDetail() {
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
             <Clock size={12} />
             <Typography variant="caption" color="text.secondary">
-              Assigned {formatDate(leadMetadata?.processingStartDate ?? file.assignedAt)}
+              Assigned{" "}
+              {formatDate(leadMetadata?.processingStartDate ?? file.assignedAt)}
             </Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
@@ -309,4 +364,64 @@ export function LiveFileDetail() {
       </Container>
     </Box>
   )
+}
+
+function HistoryItem({
+  entry,
+  isLast,
+}: {
+  entry: SalesforceLeadHistory
+  isLast: boolean
+}) {
+  const oldValue = entry.OldValue || ""
+  const newValue = entry.NewValue || ""
+  const description =
+    oldValue && newValue
+      ? `${oldValue} → ${newValue}`
+      : oldValue
+        ? ""
+        : newValue
+  const title =
+    !oldValue && newValue
+      ? `${capitalize(entry.Field.replace(/__c$/, ""))} Assigned`
+      : capitalize(entry.Field.replace(/__c$/, ""))
+
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "flex-start",
+        gap: 1.5,
+        py: 1,
+        borderBottom: isLast ? 0 : 1,
+        borderColor: "divider",
+      }}
+    >
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+          {title}
+        </Typography>
+        {description && (
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: "block", mt: 0.25 }}
+          >
+            {description}
+          </Typography>
+        )}
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ display: "block", mt: 0.25 }}
+        >
+          {formatDate(entry.CreatedDate)}
+        </Typography>
+      </Box>
+    </Box>
+  )
+}
+
+function capitalize(value: string): string {
+  return value ? value.charAt(0).toUpperCase() + value.slice(1) : value
 }
