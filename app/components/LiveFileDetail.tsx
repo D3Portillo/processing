@@ -484,12 +484,14 @@ function HistoryItem({
 }) {
   const oldValue = entry.OldValue || ""
   const newValue = entry.NewValue || ""
+  const formattedOldValue = formatHistoryValue(oldValue)
+  const formattedNewValue = formatHistoryValue(newValue)
   const description =
-    oldValue && newValue
-      ? `${oldValue} → ${newValue}`
-      : oldValue
+    formattedOldValue && formattedNewValue
+      ? `${formattedOldValue} → ${formattedNewValue}`
+      : formattedOldValue
         ? ""
-        : newValue
+        : formattedNewValue
   const title =
     !oldValue && newValue
       ? `${capitalize(entry.Field.replace(/__c$/, ""))} Assigned`
@@ -533,4 +535,10 @@ function HistoryItem({
 
 function capitalize(value: string): string {
   return value ? value.charAt(0).toUpperCase() + value.slice(1) : value
+}
+
+function formatHistoryValue(value: string): string {
+  if (!value.startsWith("005Pm")) return value
+
+  return ALL_USERS.find((user) => user.Id === value)?.Name ?? value
 }
