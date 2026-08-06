@@ -2,19 +2,9 @@
 
 import useSWR from "swr"
 import type { TaskRow } from "@/app/lib/task-types"
+import { jsonify } from "@/app/lib/utils"
 
-const fetcher = async (url: string): Promise<TaskRow[]> => {
-  const res = await fetch(url)
-  const data = (await res.json()) as TaskRow[] | { error?: string }
-
-  if (!res.ok) {
-    throw new Error(
-      "error" in data && data.error ? data.error : "Unable to fetch tasks",
-    )
-  }
-
-  return data as TaskRow[]
-}
+const fetcher = (url: string) => jsonify<TaskRow[]>(fetch(url))
 
 export function useTasks(fileId?: string | null) {
   const url = fileId

@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from "react"
 import useSWRImmutable from "swr/immutable"
 import type { SalesforceLead } from "@/app/lib/sf-leads"
+import { jsonify } from "@/app/lib/utils"
 
 const LEADS_CACHE_KEY = "processing:leads:v4"
 const LEADS_CACHE_TTL = 10 * 60 * 1000
@@ -33,16 +34,7 @@ const fetcher = async (): Promise<SalesforceLead[]> => {
     }
   }
 
-  const res = await fetch("/api/leads")
-  const data = (await res.json()) as SalesforceLead[] | { error?: string }
-
-  if (!res.ok) {
-    throw new Error(
-      "error" in data && data.error ? data.error : "Unable to fetch leads",
-    )
-  }
-
-  const leads = data as SalesforceLead[]
+  const leads = await jsonify<SalesforceLead[]>(fetch("/api/leads"))
 
   if (typeof window !== "undefined" && leads.length > 0) {
     try {

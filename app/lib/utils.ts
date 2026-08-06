@@ -4,6 +4,24 @@ import { addDays, daysBetween, todayInTz } from "./dates";
 
 export { classnames as cn };
 
+export async function jsonify<T>(
+  response: Response | Promise<Response>,
+  fallbackMessage = "Request failed",
+): Promise<T> {
+  const resolvedResponse = await response
+  const data = (await resolvedResponse.json()) as T | { error?: string }
+
+  if (!resolvedResponse.ok) {
+    const message =
+      data && typeof data === "object" && "error" in data
+        ? data.error
+        : undefined
+    throw new Error(message ?? fallbackMessage)
+  }
+
+  return data as T
+}
+
 function isCalendarDateString(value: Date | string | number): value is string {
   return (
     typeof value === "string" &&
