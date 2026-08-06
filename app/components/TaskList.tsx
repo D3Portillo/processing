@@ -5,9 +5,9 @@ import Link from "next/link";
 import { Box, Typography, Chip, FormControl, Select, MenuItem, Avatar } from "@mui/material";
 import type { Task, MortgageFile, TaskFilter } from "@/app/lib/types";
 import { colorFromString, formatRelative, getInitials, isOverdue, isToday, isTomorrow } from "@/app/lib/utils";
-import { PROCESSING_TEAM } from "@/app/lib/sf-leads";
-import { useAtom, useAtomValue } from "jotai";
-import { isTaskCompleted, taskCompletionsAtom, taskFiltersAtom } from "@/app/lib/task-state";
+import { PROCESSING_TEAM } from "@/app/lib/owners";
+import { useAtom } from "jotai";
+import { taskFiltersAtom } from "@/app/lib/task-state";
 
 const FILTER_OPTIONS: { value: TaskFilter; label: string }[] = [
   { value: "today", label: "Due Today" },
@@ -46,20 +46,17 @@ export function TaskList({ tasks, fileMap, currentSpecialistId }: { tasks: Task[
   const [filters, setFilters] = useAtom(taskFiltersAtom);
   const filter = filters.filter;
   const ownerId = filters.ownerId || currentSpecialistId;
-  const completions = useAtomValue(taskCompletionsAtom);
 
   const scoped = useMemo(() => {
-    const openTasks = tasks.filter(
-      (task) => !isTaskCompleted(task.id, task.status, completions),
-    );
+    const openTasks = tasks.filter((task) => task.status === "Open");
     if (ownerId === UNASSIGNED) return openTasks.filter((task) => !task.assignedTo.id);
     if (ownerId !== ALL_PEOPLE) return openTasks.filter((task) => task.assignedTo.id === ownerId);
     return openTasks;
-  }, [tasks, ownerId, completions]);
+  }, [tasks, ownerId]);
 
   const filtered = useMemo(() => filterTasks(scoped, filter), [scoped, filter]);
 
-  const myTasks = useMemo(() => tasks.filter((task) => !isTaskCompleted(task.id, task.status, completions) && task.assignedTo.id === currentSpecialistId), [tasks, currentSpecialistId, completions]);
+  const myTasks = useMemo(() => tasks.filter((task) => task.status === "Open" && task.assignedTo.id === currentSpecialistId), [tasks, currentSpecialistId]);
   const myOverdueCount = useMemo(() => myTasks.filter((t) => t.dueDate && isOverdue(t.dueDate) && !isToday(t.dueDate)).length, [myTasks]);
 
   const counts = useMemo(() => {
@@ -124,17 +121,20 @@ export function TaskList({ tasks, fileMap, currentSpecialistId }: { tasks: Task[
           {filtered.map((task, index) => {
             const file = fileMap.get(task.fileId);
             const overdue = task.dueDate && isOverdue(task.dueDate) && !isToday(task.dueDate);
+            const isRedFlag = task.type === "internal_red_flag";
 
             return (
               <Link key={task.id} href={`/files/${task.fileId}`} style={{ textDecoration: "none" }}>
                 <Box sx={{
                   display: "flex", alignItems: "flex-start", gap: 1.5, p: 1.5, borderRadius: 1,
                   cursor: "pointer",
-                  bgcolor: index % 2 === 0 ? "rgba(0,0,0,0.025)" : "transparent",
-                  "&:hover": { bgcolor: "rgba(0,0,0,0.05)" },
+                  bgcolor: isRedFlag ? "rgba(220,38,38,0.08)" : index % 2 === 0 ? "rgba(0,0,0,0.025)" : "transparent",
+                  borderLeft: isRedFlag ? 3 : 0,
+                  borderColor: "error.main",
+                  "&:hover": { bgcolor: isRedFlag ? "rgba(220,38,38,0.12)" : "rgba(0,0,0,0.05)" },
                 }}>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>{task.title}</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 500, color: isRedFlag ? "error.main" : "inherit" }}>{task.title}</Typography>
                     {file && (
                       <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block", mt: 0.25 }}>
                         {file.borrower.name} — {file.lender.name}

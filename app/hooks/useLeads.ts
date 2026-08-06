@@ -44,7 +44,7 @@ const fetcher = async (): Promise<SalesforceLead[]> => {
 
   const leads = data as SalesforceLead[]
 
-  if (typeof window !== "undefined") {
+  if (typeof window !== "undefined" && leads.length > 0) {
     try {
       localStorage.setItem(
         LEADS_CACHE_KEY,
@@ -61,7 +61,7 @@ const fetcher = async (): Promise<SalesforceLead[]> => {
 export function useLeads() {
   const { data, error, isLoading, isValidating, mutate } = useSWRImmutable<
     SalesforceLead[]
-  >(`all-leads`, fetcher)
+  >(`all-leads-v2`, fetcher)
 
   const [visibleCount, setVisibleCount] = useState(LEADS_PAGE_SIZE)
   const leads = useMemo(

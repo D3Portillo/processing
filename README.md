@@ -43,3 +43,23 @@ TURSO_AUTH_TOKEN=your-auth-token-here
 ```
 
 Local dev doesn't need these — it falls back to a local SQLite file automatically.
+
+## Database Setup & Sync
+
+The app stores tasks, lead metadata, and a lead cache in Turso. Run these once after configuring your environment:
+
+```bash
+# Apply the schema and validate the Turso connection.
+pnpm setup:db
+
+# Backfill lead metadata (processing start date, welcome call completion)
+# from full Salesforce LeadHistory. Run once before relying on the hourly cron.
+pnpm sync:metadata
+
+# Sync the Salesforce owner list into data/salesforce-owners.json.
+pnpm sync:users
+```
+
+Scheduled jobs (Vercel Cron, see `vercel.json`):
+- **Daily** (`0 2 * * *`) — `generate-tasks`: creates follow-up tasks based on each lead's status and `Next_Status_Update__c`.
+- **Hourly** (`0 * * * *`) — `sync-lead-metadata`: folds recent Salesforce LeadHistory into Turso lead metadata.

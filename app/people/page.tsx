@@ -3,7 +3,7 @@
 import { Container, Typography, Box, Card, CardContent, Stack, Avatar } from "@mui/material";
 import { Mail } from "lucide-react";
 import { Nav } from "@/app/components/Nav";
-import { ALL_USERS } from "@/app/lib/sf-leads";
+import { ALL_USERS } from "@/app/lib/owners";
 import { colorFromString, getInitials } from "@/app/lib/utils";
 
 export default function PeoplePage() {

@@ -16,7 +16,7 @@ import type { MortgageFile } from "@/app/lib/types"
 import { FileCard } from "./FileCard"
 import { useLeads } from "@/hooks/useLeads"
 import { colorFromString, getInitials } from "@/app/lib/utils"
-import { ALL_USERS } from "@/app/lib/sf-leads"
+import { ALL_USERS } from "@/app/lib/owners"
 import { useAtom } from "jotai"
 import { fileFiltersAtom } from "@/app/lib/task-state"
 

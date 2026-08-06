@@ -98,6 +98,7 @@ export interface Task {
   fileId: string
   title: string
   description: string | null
+  type?: string
   assignedTo: Specialist
   dueDate: string | null // ISO date string
   status: TaskStatus

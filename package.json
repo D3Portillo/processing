@@ -7,15 +7,19 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "sync:users": "tsx scripts/sync-salesforce-owners.ts"
+    "sync:users": "tsx scripts/sync-salesforce-owners.ts",
+    "sync:metadata": "tsx scripts/sync-lead-metadata.ts",
+    "setup:db": "tsx scripts/setup-db.ts"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@libsql/client": "^0.17.4",
     "@mui/icons-material": "^9.2.0",
     "@mui/material": "^9.2.0",
     "@mui/material-nextjs": "^9.1.1",
+    "@upstash/redis": "^1.38.2",
     "classnames": "^2.5.1",
     "date-fns": "^4.4.0",
     "dotenv": "^17.4.2",

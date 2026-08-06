@@ -1,19 +1,7 @@
 import { getToken, sfQuery } from "./sf"
-import owners from "@/data/salesforce-owners.json"
-
-export interface SalesforceOwner {
-  Id: string
-  Name: string
-  isProcessingTeamMember?: boolean
-  Email: string | null
-  AvatarUrl?: string | null
-}
-
-export const ALL_USERS = (owners as SalesforceOwner[]).filter((o) =>
-  o.Email?.includes("retentiongroup.org"),
-)
-
-export const PROCESSING_TEAM = ALL_USERS.filter((o) => o.isProcessingTeamMember)
+import { redis } from "./redis"
+import { PROCESSING_TEAM, type SalesforceOwner } from "./owners"
+import { addDays, todayInTz, toDateInTz } from "./dates"
 
 export interface SalesforceLead {
   Email: string | null
@@ -33,44 +21,52 @@ export interface SalesforceLead {
   Next_Status_Update__c: string | null
   Last_Lender_Call__c: string | null
   Sale_Date_On_Property__c: string | null
-  ProcessingStartDate: string
-  UnderwritingStartDate: string | null
-  UnderwritingEndDate: string | null
-  MissingDocsDate: string | null
-  HaltedDate: string | null
 }
 
-export interface SalesforceLeadHistory {
-  Id: string
-  LeadId: string
-  Field: string
-  OldValue: string | null
-  NewValue: string | null
-  CreatedDate: string
-}
+// --- Lead cache (Redis) ---------------------------------------------------
+// Active leads are cached in Redis as a single JSON blob under one key, with
+// a second key storing the last sync date. Simple and fast.
 
-export const ACTIVE_LEADS_QUERY = `
-SELECT Email, OwnerId, Phone, LastModifiedDate, CreatedDate, Loan_Number__c, What_type_of_loan_do_they_have__c, Id, Name, Status, Lender__c, QWR_RMA_Lender_Phone_Number__c, Underwriting_Lender_Phone_Number__c, Last_Status_Update__c, Next_Status_Update__c, Last_Lender_Call__c, Sale_Date_On_Property__c
-FROM Lead
-WHERE OwnerId IN (${PROCESSING_TEAM.map((u) => `'${u.Id}'`).join(",")})
-ORDER BY LastModifiedDate DESC`
+const LEADS_CACHE_KEY = "processing.leads.cache"
+const LEADS_SYNC_KEY = "processing.leads.lastSync"
 
-export const PROCESSING_LEAD_HISTORY_QUERY = `
-SELECT Id, LeadId, Field, OldValue, NewValue, CreatedDate
-FROM LeadHistory
-WHERE Field = 'Status'
-ORDER BY CreatedDate DESC`
-
-// Terminal statuses — dead ends where follow-ups should stop
-export const HALTED_STATUSES = new Set([
-  "DENIED",
-  "UNRSPSV",
-  "Unqualified",
-  "Non-Payment",
-  "Closed",
-  "Refunded",
+// Statuses recognized by the app (mirrors lead-mapper's STATUS_TO_STAGE keys).
+// Leads in any other status are not fetched or processed.
+const KNOWN_STATUSES = new Set([
+  "Processing",
+  "W.E. SENT",
+  "W.C. Complete",
+  "TPA PENDING",
+  "SUB PENDING",
+  "QWR/RMA",
+  "QWR ONLY",
+  "Missing Documents",
+  "UNDERWRITING",
+  "Escalation",
+  "Approved Pending Docs",
   "APPROVED",
+  "DENIED",
+  "Non-Compliance",
+  "BK",
+  "Qualified",
+  "Refunded",
+  "Closed",
 ])
+
+function buildLeadQuery(modifiedAfter?: string): string {
+  const ownerFilter = PROCESSING_TEAM.map((u) => `'${u.Id}'`).join(",")
+  const statusFilter = Array.from(KNOWN_STATUSES)
+    .map((s) => `'${s}'`)
+    .join(",")
+  const timeFilter = modifiedAfter
+    ? ` AND LastModifiedDate > ${modifiedAfter}`
+    : ""
+  return `SELECT Email, OwnerId, Phone, LastModifiedDate, CreatedDate, Loan_Number__c, What_type_of_loan_do_they_have__c, Id, Name, Status, Lender__c, QWR_RMA_Lender_Phone_Number__c, Underwriting_Lender_Phone_Number__c, Last_Status_Update__c, Next_Status_Update__c, Last_Lender_Call__c, Sale_Date_On_Property__c
+FROM Lead
+WHERE OwnerId IN (${ownerFilter})${timeFilter}
+AND Status IN (${statusFilter})
+ORDER BY LastModifiedDate DESC`
+}
 
 function normalizeLead(lead: SalesforceLead): SalesforceLead {
   return {
@@ -79,45 +75,79 @@ function normalizeLead(lead: SalesforceLead): SalesforceLead {
   }
 }
 
-export async function getActiveLeads(): Promise<SalesforceLead[]> {
+async function getLastSyncedAt(): Promise<string | null> {
+  return redis.get<string>(LEADS_SYNC_KEY)
+}
+
+async function setLastSyncedAt(value: string): Promise<void> {
+  await redis.set(LEADS_SYNC_KEY, value)
+}
+
+// Incremental sync: fetches only leads modified since the last sync pointer,
+// merges them into the cached blob, and stores the whole thing back. Leads
+// are never deleted — owner changes just update in place.
+// Called by the lead-sync cron, not on every request.
+export async function syncLeads(): Promise<{ fetched: number }> {
   const token = await getToken()
-  const [leads, history] = await Promise.all([
-    sfQuery<
-      Omit<SalesforceLead, "ProcessingStartDate" | "UnderwritingStartDate" | "UnderwritingEndDate" | "MissingDocsDate" | "HaltedDate">
-    >(ACTIVE_LEADS_QUERY, token),
-    getProcessingLeadHistory(token),
-  ])
-  const processingDates = getLatestStatusDates(history, "Processing")
-  const underwritingStartDates = getLatestStatusDates(history, "UNDERWRITING")
-  const underwritingEndDates = getLatestStatusExitDates(history, "UNDERWRITING")
-  const missingDocsDates = getLatestStatusDates(history, "Missing Documents")
-  const haltedDates = getLatestStatusInSetDates(history, HALTED_STATUSES)
+  const lastSyncedAt = await getLastSyncedAt()
 
-  console.debug({
-    totalLeads: leads.length,
-    totalHistory: history.length,
-    totalProcessingDates: processingDates.size,
-    totalUnderwritingStartDates: underwritingStartDates.size,
-    totalUnderwritingEndDates: underwritingEndDates.size,
-    totalMissingDocsDates: missingDocsDates.size,
-    totalHaltedDates: haltedDates.size,
+  const leads = await sfQuery<SalesforceLead>(
+    buildLeadQuery(lastSyncedAt ?? undefined),
+    token,
+  )
+  const normalized = leads.map(normalizeLead)
+
+  // Merge into existing cache (or start fresh).
+  const existing = (await redis.get<SalesforceLead[]>(LEADS_CACHE_KEY)) ?? []
+  const byId = new Map(existing.map((lead) => [lead.Id, lead]))
+  for (const lead of normalized) byId.set(lead.Id, lead)
+  const merged = Array.from(byId.values())
+
+  await redis.set(LEADS_CACHE_KEY, JSON.stringify(merged))
+
+  const maxModified = normalized.reduce(
+    (max, lead) => (lead.LastModifiedDate > max ? lead.LastModifiedDate : max),
+    lastSyncedAt ?? "",
+  )
+  await setLastSyncedAt(maxModified || new Date().toISOString())
+
+  return { fetched: normalized.length }
+}
+
+// Core entry point. Read-only: returns the cached leads instantly from Redis.
+// On the very first run (empty cache), it performs a one-time sync to seed
+// the cache so the app isn't empty before the cron has run.
+export async function getActiveLeads(): Promise<SalesforceLead[]> {
+  const cached = await redis.get<SalesforceLead[]>(LEADS_CACHE_KEY)
+  if (cached && cached.length > 0) return cached
+
+  await syncLeads()
+  return (await redis.get<SalesforceLead[]>(LEADS_CACHE_KEY)) ?? []
+}
+
+// Filters cached leads down to the ones relevant for task generation:
+//   - status is one of the known statuses (from lead-mapper), AND
+//   - created in the last 30 days (welcome email/call pending or complete), OR
+//   - has a Next_Status_Update__c within the next 30 days (upcoming follow-up).
+// This keeps the daily job from processing the whole cache.
+export function filterLeadsForTaskGeneration(
+  leads: SalesforceLead[],
+): SalesforceLead[] {
+  const today = todayInTz()
+  const createdCutoff = addDays(today, -30)
+  const followUpCutoff = addDays(today, 30)
+
+  return leads.filter((lead) => {
+    if (!KNOWN_STATUSES.has(lead.Status)) return false
+
+    const created = toDateInTz(lead.CreatedDate)
+    if (created && created >= createdCutoff) return true
+
+    const next = toDateInTz(lead.Next_Status_Update__c)
+    if (next && next <= followUpCutoff) return true
+
+    return false
   })
-
-  return leads
-    .map((lead) => {
-      const processingStartDate = processingDates.get(lead.Id)
-      if (!processingStartDate) return null
-
-      return normalizeLead({
-        ...lead,
-        ProcessingStartDate: processingStartDate,
-        UnderwritingStartDate: underwritingStartDates.get(lead.Id) ?? null,
-        UnderwritingEndDate: underwritingEndDates.get(lead.Id) ?? null,
-        MissingDocsDate: missingDocsDates.get(lead.Id) ?? null,
-        HaltedDate: haltedDates.get(lead.Id) ?? null,
-      })
-    })
-    .filter((lead): lead is SalesforceLead => lead !== null)
 }
 
 export async function getActiveLeadOwners(): Promise<SalesforceOwner[]> {
@@ -126,73 +156,4 @@ SELECT Id, Name, Email
 FROM User
 WHERE IsActive = true
 ORDER BY Name`)
-}
-
-export async function getProcessingLeadHistory(
-  token?: string,
-): Promise<SalesforceLeadHistory[]> {
-  const history = await sfQuery<SalesforceLeadHistory>(
-    PROCESSING_LEAD_HISTORY_QUERY,
-    token,
-  )
-  return history
-}
-
-function getLatestStatusDates(
-  history: SalesforceLeadHistory[],
-  status: string,
-): Map<string, string> {
-  const dates = new Map<string, string>()
-
-  for (const entry of history) {
-    if (entry.NewValue !== status) continue
-
-    // History is sorted by CreatedDate DESC, so the first matching entry
-    // is the latest time the lead entered this status.
-    if (!dates.has(entry.LeadId)) {
-      dates.set(entry.LeadId, entry.CreatedDate)
-    }
-  }
-
-  return dates
-}
-
-// Finds the most recent date a lead EXITED the given status — i.e. the
-// lead's status changed FROM `status` to something else. History is sorted
-// by CreatedDate DESC, so the first matching entry is the latest exit.
-function getLatestStatusExitDates(
-  history: SalesforceLeadHistory[],
-  status: string,
-): Map<string, string> {
-  const dates = new Map<string, string>()
-
-  for (const entry of history) {
-    if (entry.OldValue !== status) continue
-    if (entry.NewValue === status) continue
-
-    if (!dates.has(entry.LeadId)) {
-      dates.set(entry.LeadId, entry.CreatedDate)
-    }
-  }
-
-  return dates
-}
-
-// Finds the most recent date a lead entered ANY status in the given set.
-// History is sorted by CreatedDate DESC, so the first matching entry wins.
-function getLatestStatusInSetDates(
-  history: SalesforceLeadHistory[],
-  statuses: Set<string>,
-): Map<string, string> {
-  const dates = new Map<string, string>()
-
-  for (const entry of history) {
-    if (!entry.NewValue || !statuses.has(entry.NewValue)) continue
-
-    if (!dates.has(entry.LeadId)) {
-      dates.set(entry.LeadId, entry.CreatedDate)
-    }
-  }
-
-  return dates
 }

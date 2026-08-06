@@ -1,7 +1,8 @@
 import "dotenv/config"
+import type { SalesforceOwner } from "@/app/lib/owners"
 import { readFile, writeFile } from "node:fs/promises"
 import { resolve } from "node:path"
-import { getActiveLeadOwners, type SalesforceOwner } from "../app/lib/sf-leads"
+import { getActiveLeadOwners } from "@/app/lib/sf-leads"
 
 async function main() {
   const owners = await getActiveLeadOwners()
@@ -9,7 +10,9 @@ async function main() {
   let existingOwners: SalesforceOwner[] = []
 
   try {
-    existingOwners = JSON.parse(await readFile(outputPath, "utf8")) as SalesforceOwner[]
+    existingOwners = JSON.parse(
+      await readFile(outputPath, "utf8"),
+    ) as SalesforceOwner[]
   } catch {
     // Create the file if it does not exist yet.
   }
@@ -18,8 +21,14 @@ async function main() {
   const newOwners = owners.filter((owner) => !existingIds.has(owner.Id))
   const mergedOwners = [...existingOwners, ...newOwners]
 
-  await writeFile(outputPath, `${JSON.stringify(mergedOwners, null, 2)}\n`, "utf8")
-  console.log(`Added ${newOwners.length} new Salesforce owners; ${mergedOwners.length} total saved`)
+  await writeFile(
+    outputPath,
+    `${JSON.stringify(mergedOwners, null, 2)}\n`,
+    "utf8",
+  )
+  console.log(
+    `Added ${newOwners.length} new Salesforce owners; ${mergedOwners.length} total saved`,
+  )
 }
 
 main().catch((error: unknown) => {

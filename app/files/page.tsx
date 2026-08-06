@@ -4,7 +4,7 @@ import { Container, Box } from "@mui/material"
 import { Nav } from "@/app/components/Nav"
 import { LiveFiles } from "@/app/components/LiveFiles"
 import { useSalesforceUser } from "@/app/hooks/useSalesforceUser"
-import { ALL_USERS } from "@/app/lib/sf-leads"
+import { ALL_USERS } from "@/app/lib/owners"
 
 export default function AllFilesPage() {
   const { data } = useSalesforceUser()

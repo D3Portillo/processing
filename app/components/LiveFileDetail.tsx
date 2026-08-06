@@ -17,10 +17,8 @@ import {
 import { Phone, Mail, MapPin, Clock, User } from "lucide-react"
 import { useLeads } from "@/app/hooks/useLeads"
 import { useSalesforceUser } from "@/app/hooks/useSalesforceUser"
-import { useLeadHistory } from "@/app/hooks/useLeadHistory"
-import type { LeadHistoryEntry } from "@/app/hooks/useLeadHistory"
+import { useTasks } from "@/app/hooks/useTasks"
 import { mapLeadToMortgageFile } from "@/app/lib/lead-mapper"
-import { deriveLeadTasks } from "@/app/lib/lead-tasks"
 import { Nav } from "@/app/components/Nav"
 import { FileMenu } from "@/app/components/FileMenu"
 import { LenderCard } from "@/app/components/LenderCard"
@@ -28,56 +26,18 @@ import { StageBadge } from "@/app/components/StageBadge"
 import { FileTabs } from "@/app/components/FileTabs"
 import { AddTaskDialog } from "@/app/components/AddTaskDialog"
 import { AssignSelector } from "@/app/components/AssignSelector"
-import { ALL_USERS } from "@/app/lib/sf-leads"
+import { ALL_USERS } from "@/app/lib/owners"
 import { colorFromString, formatDate, formatRelative } from "@/app/lib/utils"
 import { GeneratedTaskCheckbox } from "@/app/components/GeneratedTaskCheckbox"
-import { useAtomValue } from "jotai"
-import { isTaskCompleted, taskCompletionsAtom } from "@/app/lib/task-state"
-
-function capitalize(value: string): string {
-  return value ? value.charAt(0).toUpperCase() + value.slice(1) : value
-}
-
-// Title: "Status" or "Status Assigned" (when old is empty, new exists)
-function fieldTitle(entry: LeadHistoryEntry): string {
-  const field = capitalize(entry.Field.replace(/__c$/, ""))
-  const oldEmpty = !entry.OldValue || entry.OldValue === ""
-  const newEmpty = !entry.NewValue || entry.NewValue === ""
-
-  if (oldEmpty && !newEmpty) return `${field} Assigned`
-  return field
-}
-
-// Resolves a Salesforce user ID (starts with 005) to the owner's name.
-function resolveValue(value: string | null): string {
-  if (!value) return ""
-  if (value.startsWith("005")) {
-    const owner = ALL_USERS.find((o) => o.Id === value)
-    if (owner) return owner.Name
-  }
-  return value
-}
-
-// Subtitle: the change description. Empty string = don't render subtitle.
-function describeChange(entry: LeadHistoryEntry): string {
-  const oldEmpty = !entry.OldValue || entry.OldValue === ""
-  const newEmpty = !entry.NewValue || entry.NewValue === ""
-
-  if (oldEmpty && newEmpty) return ""
-  if (oldEmpty && !newEmpty) return resolveValue(entry.NewValue)
-  return `${resolveValue(entry.OldValue)} → ${resolveValue(entry.NewValue)}`
-}
+import type { Task } from "@/app/lib/types"
 
 export function LiveFileDetail() {
   const params = useParams<{ fileId: string }>()
   const { data: leads, error, isLoading } = useLeads()
   const { data: connectedUser } = useSalesforceUser()
-  const completions = useAtomValue(taskCompletionsAtom)
-  const { data: history, isLoading: historyLoading } = useLeadHistory(
-    leads?.find((item) => item.Id === params.fileId)?.Id ?? null,
-  )
+  const { data: taskRows, isLoading: tasksLoading } = useTasks(params.fileId)
 
-  if (isLoading) {
+  if (isLoading || tasksLoading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
         <CircularProgress />
@@ -109,14 +69,23 @@ export function LiveFileDetail() {
     (specialist) => specialist.email.toLowerCase() === connectedUser?.user?.email.toLowerCase(),
   )
   const actorId = actor?.id ?? file.specialist?.id ?? specialists[0]?.id ?? ""
-  const generatedTasks = deriveLeadTasks(lead, file.specialist ?? specialists[0])
-  const openTasks = generatedTasks.filter(
-    (task) => !isTaskCompleted(task.id, task.status, completions),
-  )
-  const allHistory = history ?? []
+  const ownerMap = new Map(specialists.map((s) => [s.id, s]))
+  const generatedTasks: Task[] = (taskRows ?? []).map((row) => ({
+    id: row.id,
+    fileId: row.file_id,
+    title: row.title,
+    description: row.note,
+    type: row.type,
+    assignedTo: ownerMap.get(row.assigned_to) ?? specialists[0],
+    dueDate: row.due_date,
+    status: row.status,
+    createdAt: row.created_at,
+    completedAt: row.completed_at,
+  }))
+  const openTasks = generatedTasks.filter((task) => task.status === "Open")
   const taskCounts = {
     tasks: openTasks.length,
-    timeline: allHistory.length,
+    timeline: 0,
     notes: 0,
     documents: 0,
   }
@@ -276,7 +245,7 @@ export function LiveFileDetail() {
               {generatedTasks.map((task) => (
                 <Box key={task.id} sx={{ display: "flex", alignItems: "center", gap: 1, py: 1 }}>
                   <GeneratedTaskCheckbox task={task} actorId={actorId} />
-                  <Typography sx={{ flex: 1, textDecoration: isTaskCompleted(task.id, task.status, completions) ? "line-through" : "none" }}>{task.title}</Typography>
+                  <Typography sx={{ flex: 1, textDecoration: task.status === "Completed" ? "line-through" : "none", color: task.type === "internal_red_flag" && task.status === "Open" ? "error.main" : "inherit", fontWeight: task.type === "internal_red_flag" && task.status === "Open" ? 600 : 400 }}>{task.title}</Typography>
                   <Typography variant="caption" color="text.secondary">{task.dueDate ? formatDate(task.dueDate) : "No due date"}</Typography>
                 </Box>
               ))}
@@ -285,48 +254,12 @@ export function LiveFileDetail() {
           </Card>
           <Card variant="outlined">
             <CardContent>
-              {historyLoading ? (
-                <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-                  <CircularProgress size={24} />
-                </Box>
-              ) : allHistory.length > 0 ? (
-                <Box sx={{ display: "flex", flexDirection: "column" }}>
-                  {allHistory.map((entry, i) => (
-                    <Box
-                      key={entry.Id}
-                      sx={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: 1.5,
-                        py: 1,
-                        borderBottom: i < allHistory.length - 1 ? 1 : 0,
-                        borderColor: "divider",
-                      }}
-                    >
-                      <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                          {fieldTitle(entry)}
-                        </Typography>
-                        {describeChange(entry) && (
-                          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
-                            {describeChange(entry)}
-                          </Typography>
-                        )}
-                        <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
-                          {formatDate(entry.CreatedDate)}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  ))}
-                </Box>
-              ) : (
-                <Typography
-                  color="text.secondary"
-                  sx={{ textAlign: "center", py: 4 }}
-                >
-                  No timeline events from Salesforce yet.
-                </Typography>
-              )}
+              <Typography
+                color="text.secondary"
+                sx={{ textAlign: "center", py: 4 }}
+              >
+                No timeline events yet.
+              </Typography>
             </CardContent>
           </Card>
           <Card variant="outlined">

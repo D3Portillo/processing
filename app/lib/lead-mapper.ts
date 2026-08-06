@@ -1,11 +1,10 @@
 import type { MortgageFile, Stage } from "./types"
 import { LENDERS } from "./lenders"
-import { ALL_USERS } from "./sf-leads"
+import { ALL_USERS } from "@/app/lib/owners"
 import type { SalesforceLead } from "./sf-leads"
 import { colorFromString } from "./utils"
 
 const STATUS_TO_STAGE: Record<string, Stage> = {
-  "Retainer Agreement Signed": "Processing",
   Processing: "Processing",
   "W.E. SENT": "Submitted",
   "W.C. Complete": "Submitted",
@@ -23,9 +22,6 @@ const STATUS_TO_STAGE: Record<string, Stage> = {
   BK: "Escalation",
   Qualified: "Processing",
   Refunded: "Closed",
-  UNRSPSV: "Processing",
-  Unqualified: "Denied",
-  "Non-Payment": "Denied",
   Closed: "Closed",
 }
 
@@ -93,11 +89,11 @@ export function mapLeadToMortgageFile(lead: SalesforceLead): MortgageFile {
     stage: mapStage(lead.Status),
     saleDate: toIsoDate(saleDate),
     createdAt: lead.CreatedDate,
-    assignedAt: lead.ProcessingStartDate,
-    underwritingStartDate: lead.UnderwritingStartDate,
-    underwritingEndDate: lead.UnderwritingEndDate,
-    missingDocsDate: lead.MissingDocsDate,
-    haltedDate: lead.HaltedDate,
+    assignedAt: lead.CreatedDate,
+    underwritingStartDate: null,
+    underwritingEndDate: null,
+    missingDocsDate: null,
+    haltedDate: null,
     updatedAt: lead.LastModifiedDate,
     nextStatusUpdate: lead.Next_Status_Update__c,
     lastLenderCall: lead.Last_Lender_Call__c,
