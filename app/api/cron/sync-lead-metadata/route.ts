@@ -3,7 +3,7 @@ import { getActiveLeads } from "@/app/lib/sf-leads"
 import {
   foldHistoryToMetadata,
   getLeadHistoryForLeads,
-  upsertLeadMetadata,
+  upsertLeadMetadataBatch,
 } from "@/app/lib/lead-metadata"
 
 // Hourly job: syncs recent LeadHistory into one Redis metadata key per lead.
@@ -11,8 +11,10 @@ export async function GET() {
   try {
     const leads = await getActiveLeads()
     const createdAfter = new Date(
+      // Sync only the last 2 days of history, since the hourly job will run again soon.
       Date.now() - 2 * 24 * 60 * 60 * 1000,
     ).toISOString()
+
     const history = await getLeadHistoryForLeads(
       leads.map((lead) => lead.Id),
       createdAfter,
@@ -25,19 +27,19 @@ export async function GET() {
       byLead.set(entry.LeadId, entries)
     }
 
-    let updated = 0
-    for (const lead of leads) {
+    const updates = leads.flatMap((lead) => {
       const entries = byLead.get(lead.Id)
-      if (!entries?.length) continue
+      if (!entries?.length) return []
 
-      await upsertLeadMetadata(lead.Id, foldHistoryToMetadata(entries))
-      updated += 1
-    }
+      return [{ leadId: lead.Id, metadata: foldHistoryToMetadata(entries) }]
+    })
+
+    await upsertLeadMetadataBatch(updates)
 
     return NextResponse.json({
       totalLeads: leads.length,
       historyRecords: history.length,
-      updated,
+      updated: updates.length,
     })
   } catch (error) {
     const message =

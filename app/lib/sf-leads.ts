@@ -127,15 +127,15 @@ export async function getActiveLeads(): Promise<SalesforceLead[]> {
 
 // Filters cached leads down to the ones relevant for task generation:
 //   - status is one of the known statuses (from lead-mapper), AND
-//   - created in the last 30 days (welcome email/call pending or complete), OR
-//   - has a Next_Status_Update__c within the next 30 days (upcoming follow-up).
+//   - created in the last 7 days (welcome email/call pending or complete), OR
+//   - has a Next_Status_Update__c within the next 9 days (upcoming follow-up).
 // This keeps the daily job from processing the whole cache.
 export function filterLeadsForTaskGeneration(
   leads: SalesforceLead[],
 ): SalesforceLead[] {
   const today = todayInTz()
-  const createdCutoff = addDays(today, -30)
-  const followUpCutoff = addDays(today, 30)
+  const createdCutoff = addDays(today, -7)
+  const followUpCutoff = addDays(today, 9)
 
   return leads.filter((lead) => {
     if (!KNOWN_STATUSES.has(lead.Status)) return false

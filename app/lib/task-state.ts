@@ -1,17 +1,17 @@
-import { atomWithStorage } from "jotai/utils"
+import { atom } from "jotai"
 
-export const taskFiltersAtom = atomWithStorage<{
+export const taskFiltersAtom = atom<{
   ownerId: string
   filter: "today" | "tomorrow" | "upcoming" | "overdue"
-}>("processing:task-filters", {
+}>({
   ownerId: "",
   filter: "today",
 })
 
-export const fileFiltersAtom = atomWithStorage<{
+export const fileFiltersAtom = atom<{
   ownerId: string
   query: string
-}>("processing:file-filters", {
+}>({
   ownerId: "",
   query: "",
 })

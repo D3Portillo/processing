@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto"
 import type { SalesforceLead } from "./sf-leads"
 import { db, type TaskType } from "./db"
 import { addDays, daysBetween, todayInTz, toDateInTz } from "./dates"
-import { getLeadMetadata } from "./lead-metadata"
+import { getLeadMetadata, type LeadMetadata } from "./lead-metadata"
 
 // Dead-end statuses — no Layer 1 or Layer 2 tasks are generated.
 export const HALTED_STATUSES = new Set([
@@ -19,6 +19,8 @@ const UNDERWRITING_STATUS = "UNDERWRITING"
 
 // The agent sees the follow-up task this many days before the anchor date.
 const UPCOMING_WINDOW_DAYS = 2
+const STALE_FOLLOW_UP_DAYS = 9
+const WELCOME_TASK_AUTO_COMPLETE_DAYS = 9
 
 // Cadence in days based on the lead's current status.
 export function cadenceForStatus(status: string): number {
@@ -31,12 +33,12 @@ export function cadenceForStatus(status: string): number {
 // Returns null when no anchor can be determined.
 export function resolveAnchor(
   lead: SalesforceLead,
-  metadata: { welcomeCallCompletedAt: string | null } | null,
+  metadata: Partial<LeadMetadata> | null,
 ): string | null {
-  const next = toDateInTz(lead.Next_Status_Update__c)
+  const next = toDateInTz(lead.Next_Status_Update__c, "UTC")
   if (next) return next
 
-  const genesis = toDateInTz(metadata?.welcomeCallCompletedAt)
+  const genesis = toDateInTz(metadata?.welcomeCallCompletedAt, "UTC")
   if (!genesis) return null
   return addDays(genesis, cadenceForStatus(lead.Status))
 }
@@ -76,45 +78,61 @@ async function upsertTask(input: UpsertInput): Promise<boolean> {
   return Number(result.rowsAffected) > 0
 }
 
-// Welcome Email / Welcome Call — one-time per lead. Completion is derived
-// from the current status: the welcome email is done once the status has
-// moved past "W.E. SENT", and the welcome call is done once the status has
-// moved past "W.C. Complete" (i.e. it's no longer that status).
+// Welcome Email / Welcome Call — one-time per lead.
 async function ensureWelcomeTasks(
   lead: SalesforceLead,
   assignedToId: string,
+  leadMetadata?: LeadMetadata | null,
 ): Promise<number> {
-  const emailDone = lead.Status !== "W.E. SENT"
-  const callDone = lead.Status !== "W.C. Complete"
-  const genesis = toDateInTz(lead.CreatedDate) ?? todayInTz()
+  const processingDate =
+    toDateInTz(leadMetadata?.processingStartDate, "UTC") ?? todayInTz()
+  const processingAge = daysBetween(processingDate, todayInTz())
+  const agedFile = processingAge > WELCOME_TASK_AUTO_COMPLETE_DAYS
 
-  let created = 0
-  created += (await upsertTask({
-    fileId: lead.Id,
-    title: "Welcome Email",
-    type: "welcome_email",
-    assignedToId,
-    dueDate: addDays(genesis, 1),
-    idempotencyKey: `${lead.Id}:welcome_email`,
-    status: emailDone ? "Completed" : "Open",
-    completedAt: emailDone ? new Date().toISOString() : null,
-  }))
-    ? 1
-    : 0
-  created += (await upsertTask({
-    fileId: lead.Id,
-    title: "Welcome Call",
-    type: "welcome_call",
-    assignedToId,
-    dueDate: addDays(genesis, 2),
-    idempotencyKey: `${lead.Id}:welcome_call`,
-    status: callDone ? "Completed" : "Open",
-    completedAt: callDone ? new Date().toISOString() : null,
-  }))
-    ? 1
-    : 0
+  const isPastProcessingStatus = lead.Status !== "Processing"
+  const isPastWelcomeEmailFlow =
+    isPastProcessingStatus && lead.Status !== "W.E. SENT"
 
-  return created
+  const isWECompleteStatus = lead.Status === "W.E. SENT"
+  const isWCCompleteStatus = lead.Status === "W.C. Complete"
+
+  const isWCComplete =
+    isWCCompleteStatus ||
+    agedFile ||
+    leadMetadata?.welcomeCallCompletedAt ||
+    isPastWelcomeEmailFlow
+
+  const isWEComplete =
+    isWCComplete ||
+    isWECompleteStatus ||
+    agedFile ||
+    leadMetadata?.welcomeEmailCompletedAt ||
+    isPastWelcomeEmailFlow
+
+  return (
+    await Promise.all([
+      upsertTask({
+        fileId: lead.Id,
+        title: "Welcome Email",
+        type: "welcome_email",
+        assignedToId,
+        dueDate: addDays(processingDate, 1),
+        idempotencyKey: `${lead.Id}:welcome_email`,
+        status: isWEComplete ? "Completed" : "Open",
+        completedAt: leadMetadata?.welcomeEmailCompletedAt || processingDate,
+      }),
+      upsertTask({
+        fileId: lead.Id,
+        title: "Welcome Call",
+        type: "welcome_call",
+        assignedToId,
+        dueDate: addDays(processingDate, 2),
+        idempotencyKey: `${lead.Id}:welcome_call`,
+        status: isWCComplete ? "Completed" : "Open",
+        completedAt: leadMetadata?.welcomeCallCompletedAt || processingDate,
+      }),
+    ])
+  ).filter(Boolean).length
 }
 
 // Layer 1 — external follow-up (lender + borrower, same due date).
@@ -126,32 +144,34 @@ async function ensureFollowUpTasks(
   const today = todayInTz()
   const daysUntilAnchor = daysBetween(today, anchor)
 
-  // Create only when the anchor is within the upcoming window (or already due).
-  if (daysUntilAnchor > UPCOMING_WINDOW_DAYS) return 0
+  // Do not create follow-ups that are nine or more days overdue.
+  if (
+    daysUntilAnchor > UPCOMING_WINDOW_DAYS ||
+    daysUntilAnchor <= -STALE_FOLLOW_UP_DAYS
+  ) {
+    return 0
+  }
 
-  let created = 0
-  created += (await upsertTask({
-    fileId: lead.Id,
-    title: "Follow Up: Call Lender",
-    type: "follow_up_lender",
-    assignedToId,
-    dueDate: anchor,
-    idempotencyKey: `${lead.Id}:follow_up_lender:${anchor}`,
-  }))
-    ? 1
-    : 0
-  created += (await upsertTask({
-    fileId: lead.Id,
-    title: "Follow Up: Call Borrower",
-    type: "follow_up_borrower",
-    assignedToId,
-    dueDate: anchor,
-    idempotencyKey: `${lead.Id}:follow_up_borrower:${anchor}`,
-  }))
-    ? 1
-    : 0
-
-  return created
+  return (
+    await Promise.all([
+      upsertTask({
+        fileId: lead.Id,
+        title: "Follow Up: Call Lender",
+        type: "follow_up_lender",
+        assignedToId,
+        dueDate: anchor,
+        idempotencyKey: `${lead.Id}:follow_up_lender:${anchor}`,
+      }),
+      upsertTask({
+        fileId: lead.Id,
+        title: "Follow Up: Call Borrower",
+        type: "follow_up_borrower",
+        assignedToId,
+        dueDate: anchor,
+        idempotencyKey: `${lead.Id}:follow_up_borrower:${anchor}`,
+      }),
+    ])
+  ).filter(Boolean).length
 }
 
 // Layer 2 — internal red flag. Fires only when a Layer 1 follow-up task is
@@ -174,7 +194,7 @@ async function ensureRedFlagTask(
   const overdueDue = String(rows.rows[0].due_date)
   const created = await upsertTask({
     fileId: lead.Id,
-    title: "⚠ Notified but nothing happened — what's going on?",
+    title: "Internal Follow-Up: What's the status?",
     type: "internal_red_flag",
     assignedToId,
     dueDate: addDays(today, 1),
@@ -191,22 +211,27 @@ export async function generateTasksForLead(
 ): Promise<{ created: number }> {
   if (HALTED_STATUSES.has(lead.Status)) return { created: 0 }
 
-  const metadata = await getLeadMetadata(lead.Id)
-
   let created = 0
-  created += await ensureWelcomeTasks(lead, assignedToId)
+
+  const metadata = await getLeadMetadata(lead.Id)
+  created += await ensureWelcomeTasks(lead, assignedToId, metadata)
 
   // Do not create follow-up tasks until the welcome call has been completed.
-  // We wait for the welcomeCallCompleted event to exist before starting the
+  // We wait for the welcomeCallCompletedAt event to exist before starting the
   // follow-up cadence.
-  if (!metadata?.welcomeCallCompleted) return { created }
+  if (!metadata?.welcomeCallCompletedAt) return { created }
 
   const anchor = resolveAnchor(lead, {
     welcomeCallCompletedAt: metadata.welcomeCallCompletedAt,
   })
+
   if (anchor) {
-    created += await ensureFollowUpTasks(lead, assignedToId, anchor)
-    created += await ensureRedFlagTask(lead, assignedToId)
+    created += (
+      await Promise.all([
+        ensureFollowUpTasks(lead, assignedToId, anchor),
+        ensureRedFlagTask(lead, assignedToId),
+      ])
+    ).reduce((sum, n) => sum + n, 0)
   }
 
   return { created }

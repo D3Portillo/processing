@@ -3,8 +3,8 @@ import { getActiveLeads } from "../app/lib/sf-leads"
 import {
   foldHistoryToMetadata,
   getLeadHistoryForLeads,
-  upsertLeadMetadata,
-} from "../app/lib/lead-metadata"
+  upsertLeadMetadataBatch,
+} from "@/app/lib/lead-metadata"
 
 // Initial backfill of one Redis metadata key per active lead.
 async function main() {
@@ -18,17 +18,15 @@ async function main() {
     byLead.set(entry.LeadId, entries)
   }
 
-  let updated = 0
-  for (const lead of leads) {
-    await upsertLeadMetadata(
-      lead.Id,
-      foldHistoryToMetadata(byLead.get(lead.Id) ?? []),
-    )
-    updated += 1
-  }
+  const updates = leads.map((lead) => ({
+    leadId: lead.Id,
+    metadata: foldHistoryToMetadata(byLead.get(lead.Id) ?? []),
+  }))
+
+  await upsertLeadMetadataBatch(updates)
 
   console.log(
-    `Synced metadata for ${updated} leads (${history.length} history records)`,
+    `Synced metadata for ${updates.length} leads (${history.length} history records)`,
   )
 }
 

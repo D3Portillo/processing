@@ -38,6 +38,11 @@ export function toDateInTz(
   tz: string = BUSINESS_TZ,
 ): string | null {
   if (!value) return null
+
+  // Salesforce Date fields are calendar dates, not UTC instants. Preserve
+  // them as-is so 2026-08-07 cannot become 2026-08-06 in Pacific time.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
+
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return null
   return new Intl.DateTimeFormat("en-CA", {

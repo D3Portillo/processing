@@ -1,13 +1,40 @@
 import classnames from "classnames";
+import { format, parseISO } from "date-fns";
+import { addDays, daysBetween, todayInTz } from "./dates";
 
 export { classnames as cn };
 
+function isCalendarDateString(value: Date | string | number): value is string {
+  return (
+    typeof value === "string" &&
+    /^\d{4}-\d{2}-\d{2}(?:$|T)/.test(value)
+  )
+}
+
+function formatDateOnly(value: string): string {
+  return format(parseISO(value.slice(0, 10)), "MMM d, yyyy")
+}
+
 export function formatDate(date: Date | string | number): string {
+  if (isCalendarDateString(date)) return formatDateOnly(date)
+
   const d = new Date(date);
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 export function formatRelative(date: Date | string | number): string {
+  if (isCalendarDateString(date)) {
+    const calendarDate = date.slice(0, 10)
+    const diffDays = daysBetween(todayInTz(), calendarDate)
+
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Tomorrow";
+    if (diffDays === -1) return "Yesterday";
+    if (diffDays < 0) return `${Math.abs(diffDays)}d ago`;
+    if (diffDays <= 7) return `In ${diffDays}d`;
+    return formatDate(calendarDate);
+  }
+
   const d = new Date(date);
   const now = new Date();
   const diffMs = d.getTime() - now.getTime();
@@ -45,16 +72,23 @@ export function colorFromString(value: string): string {
 }
 
 export function isOverdue(date: Date | string | number): boolean {
+  if (isCalendarDateString(date)) return date.slice(0, 10) < todayInTz();
   return new Date(date).getTime() < new Date().setHours(0, 0, 0, 0);
 }
 
 export function isToday(date: Date | string | number): boolean {
+  if (isCalendarDateString(date)) return date.slice(0, 10) === todayInTz();
+
   const d = new Date(date);
   const now = new Date();
   return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
 }
 
 export function isTomorrow(date: Date | string | number): boolean {
+  if (isCalendarDateString(date)) {
+    return date.slice(0, 10) === addDays(todayInTz(), 1)
+  }
+
   const d = new Date(date);
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);

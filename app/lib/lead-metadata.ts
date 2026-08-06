@@ -12,12 +12,13 @@ export interface SalesforceLeadHistory {
 
 export interface LeadMetadata {
   processingStartDate: string | null
-  welcomeCallCompleted: boolean
+  welcomeEmailCompletedAt: string | null
   welcomeCallCompletedAt: string | null
 }
 
 const METADATA_KEY_PREFIX = "processing.lead.metadata"
 const LEAD_ID_BATCH_SIZE = 500
+const REDIS_BATCH_SIZE = 500
 
 function metadataKey(leadId: string): string {
   return `${METADATA_KEY_PREFIX}:${leadId}`
@@ -47,17 +48,22 @@ ORDER BY CreatedDate ASC`
   return all
 }
 
-// The welcome call is complete only when history records a transition FROM
-// "Welcome Call" to any other status. No status-set inference is used.
+// Welcome email and call completion are recorded only when history records a
+// transition FROM their corresponding status. No status-set inference is used.
 export function foldHistoryToMetadata(
   history: SalesforceLeadHistory[],
 ): LeadMetadata {
   let processingStartDate: string | null = null
+  let welcomeEmailCompletedAt: string | null = null
   let welcomeCallCompletedAt: string | null = null
 
   for (const entry of history) {
     if (entry.NewValue === "Processing" && !processingStartDate) {
       processingStartDate = entry.CreatedDate
+    }
+
+    if (entry.OldValue === "W.E. SENT" && !welcomeEmailCompletedAt) {
+      welcomeEmailCompletedAt = entry.CreatedDate
     }
 
     if (entry.OldValue === "W.C. Complete" && !welcomeCallCompletedAt) {
@@ -67,30 +73,40 @@ export function foldHistoryToMetadata(
 
   return {
     processingStartDate,
-    welcomeCallCompleted: welcomeCallCompletedAt !== null,
+    welcomeEmailCompletedAt,
     welcomeCallCompletedAt,
   }
 }
 
-export async function upsertLeadMetadata(
-  leadId: string,
-  metadata: LeadMetadata,
+export async function upsertLeadMetadataBatch(
+  updates: Array<{ leadId: string; metadata: LeadMetadata }>,
 ): Promise<void> {
-  const key = metadataKey(leadId)
-  const existing = await redis.get<LeadMetadata>(key)
+  for (let i = 0; i < updates.length; i += REDIS_BATCH_SIZE) {
+    const batch = updates.slice(i, i + REDIS_BATCH_SIZE)
+    const keys = batch.map(({ leadId }) => metadataKey(leadId))
+    const existing = await redis.mget<(LeadMetadata | null)[]>(keys)
+    const values: Record<string, LeadMetadata> = {}
 
-  const merged: LeadMetadata = {
-    processingStartDate:
-      metadata.processingStartDate ?? existing?.processingStartDate ?? null,
-    welcomeCallCompleted:
-      existing?.welcomeCallCompleted || metadata.welcomeCallCompleted,
-    welcomeCallCompletedAt:
-      metadata.welcomeCallCompletedAt ??
-      existing?.welcomeCallCompletedAt ??
-      null,
+    for (const [index, update] of batch.entries()) {
+      const current = existing[index]
+      values[keys[index]] = {
+        processingStartDate:
+          update.metadata.processingStartDate ??
+          current?.processingStartDate ??
+          null,
+        welcomeEmailCompletedAt:
+          update.metadata.welcomeEmailCompletedAt ??
+          current?.welcomeEmailCompletedAt ??
+          null,
+        welcomeCallCompletedAt:
+          update.metadata.welcomeCallCompletedAt ??
+          current?.welcomeCallCompletedAt ??
+          null,
+      }
+    }
+
+    await redis.mset(values)
   }
-
-  await redis.set(key, merged)
 }
 
 export async function getLeadMetadata(

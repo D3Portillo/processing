@@ -18,6 +18,7 @@ import { Phone, Mail, MapPin, Clock, User } from "lucide-react"
 import { useLeads } from "@/app/hooks/useLeads"
 import { useSalesforceUser } from "@/app/hooks/useSalesforceUser"
 import { useTasks } from "@/app/hooks/useTasks"
+import { useLeadMetadata } from "@/app/hooks/useLeadMetadata"
 import { mapLeadToMortgageFile } from "@/app/lib/lead-mapper"
 import { Nav } from "@/app/components/Nav"
 import { FileMenu } from "@/app/components/FileMenu"
@@ -36,6 +37,7 @@ export function LiveFileDetail() {
   const { data: leads, error, isLoading } = useLeads()
   const { data: connectedUser } = useSalesforceUser()
   const { data: taskRows, isLoading: tasksLoading } = useTasks(params.fileId)
+  const { data: leadMetadata } = useLeadMetadata(params.fileId)
 
   if (isLoading || tasksLoading) {
     return (
@@ -294,7 +296,7 @@ export function LiveFileDetail() {
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
             <Clock size={12} />
             <Typography variant="caption" color="text.secondary">
-              Assigned {formatDate(file.assignedAt)}
+              Assigned {formatDate(leadMetadata?.processingStartDate ?? file.assignedAt)}
             </Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
