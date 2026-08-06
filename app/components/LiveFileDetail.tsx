@@ -13,13 +13,16 @@ import {
   Divider,
   Stack,
   Chip,
+  Button,
 } from "@mui/material"
-import { Phone, Mail, MapPin, Clock, User } from "lucide-react"
+import { FileText, ExternalLink, Phone, Mail, MapPin, Clock, User } from "lucide-react"
 import { useLeads } from "@/app/hooks/useLeads"
 import { useSalesforceUser } from "@/app/hooks/useSalesforceUser"
 import { useTasks } from "@/app/hooks/useTasks"
 import { useLeadMetadata } from "@/app/hooks/useLeadMetadata"
 import { useLeadHistory } from "@/app/hooks/useLeadHistory"
+import { useLeadNotes } from "@/app/hooks/useLeadNotes"
+import { useLeadFiles } from "@/app/hooks/useLeadFiles"
 import type { SalesforceLeadHistory } from "@/app/lib/lead-metadata"
 import { mapLeadToMortgageFile } from "@/app/lib/lead-mapper"
 import { Nav } from "@/app/components/Nav"
@@ -43,6 +46,8 @@ export function LiveFileDetail() {
   const { data: history, isLoading: historyLoading } = useLeadHistory(
     params.fileId,
   )
+  const { data: notes, isLoading: notesLoading } = useLeadNotes(params.fileId)
+  const { data: files, isLoading: filesLoading } = useLeadFiles(params.fileId)
 
   if (isLoading || tasksLoading) {
     return (
@@ -93,11 +98,13 @@ export function LiveFileDetail() {
   }))
   const openTasks = generatedTasks.filter((task) => task.status === "Open")
   const allHistory = history ?? []
+  const allNotes = notes ?? []
+  const allFiles = files ?? []
   const taskCounts = {
     tasks: openTasks.length,
     timeline: allHistory.length,
-    notes: 0,
-    documents: 0,
+    notes: allNotes.length,
+    documents: allFiles.length,
   }
 
   return (
@@ -320,22 +327,110 @@ export function LiveFileDetail() {
           </Card>
           <Card variant="outlined">
             <CardContent>
-              <Typography
-                color="text.secondary"
-                sx={{ textAlign: "center", py: 4 }}
-              >
-                No notes yet.
-              </Typography>
+              {notesLoading ? (
+                <TabLoading />
+              ) : allNotes.length > 0 ? (
+                <Box sx={{ display: "flex", flexDirection: "column" }}>
+                  {allNotes.map((note, index) => (
+                    <Box
+                      key={note.id}
+                      sx={{
+                        py: 1.5,
+                        borderBottom: index === allNotes.length - 1 ? 0 : 1,
+                        borderColor: "divider",
+                      }}
+                    >
+                      <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {note.authorName ?? "Unknown poster"}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
+                          {formatDate(note.updatedAt || note.createdAt)}
+                        </Typography>
+                      </Box>
+                      {note.body ? (
+                        <Box
+                          component="div"
+                          color="text.secondary"
+                          sx={{
+                            mt: 0.75,
+                            typography: "body2",
+                            "& p": { m: 0 },
+                            "& p + p": { mt: 1 },
+                            "& a": { color: "primary.main" },
+                            "& ul, & ol": { pl: 2.5, my: 0.5 },
+                          }}
+                          dangerouslySetInnerHTML={{ __html: note.body }}
+                        />
+                      ) : (
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
+                          No note content.
+                        </Typography>
+                      )}
+                    </Box>
+                  ))}
+                </Box>
+              ) : (
+                <Typography color="text.secondary" sx={{ textAlign: "center", py: 4 }}>
+                  No notes yet.
+                </Typography>
+              )}
             </CardContent>
           </Card>
           <Card variant="outlined">
             <CardContent>
-              <Typography
-                color="text.secondary"
-                sx={{ textAlign: "center", py: 4 }}
-              >
-                No documents uploaded.
-              </Typography>
+              {filesLoading ? (
+                <TabLoading />
+              ) : allFiles.length > 0 ? (
+                <Box sx={{ display: "flex", flexDirection: "column" }}>
+                  {allFiles.map((document, index) => (
+                    <Box
+                      key={`${document.source}-${document.id}`}
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1.5,
+                        py: 1,
+                        borderBottom: index === allFiles.length - 1 ? 0 : 1,
+                        borderColor: "divider",
+                      }}
+                    >
+                      <FileText size={18} />
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant="body2" noWrap sx={{ fontWeight: 500 }}>
+                          {document.name}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {document.extension
+                            ? document.extension.toUpperCase()
+                            : document.fileType ?? document.contentType ?? "File"}
+                          {document.fileSize !== null ? ` · ${formatFileSize(document.fileSize)}` : ""}
+                        </Typography>
+                        {document.description && (
+                          <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>
+                            {document.description}
+                          </Typography>
+                        )}
+                      </Box>
+                      <Button
+                        component="a"
+                        href={document.previewUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        size="small"
+                        variant="outlined"
+                        endIcon={<ExternalLink size={14} />}
+                      >
+                        Open
+                      </Button>
+                    </Box>
+                  ))}
+                </Box>
+              ) : (
+                <Typography color="text.secondary" sx={{ textAlign: "center", py: 4 }}>
+                  No documents uploaded.
+                </Typography>
+              )}
             </CardContent>
           </Card>
         </FileTabs>
@@ -364,6 +459,20 @@ export function LiveFileDetail() {
       </Container>
     </Box>
   )
+}
+
+function TabLoading() {
+  return (
+    <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+      <CircularProgress size={24} />
+    </Box>
+  )
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 function HistoryItem({

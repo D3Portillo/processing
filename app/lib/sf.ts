@@ -6,6 +6,10 @@ export const SF_API = `${SF_BASE}/services/data/v66.0`
 export const SF_LOGIN_URL =
   process.env.SF_LOGIN_URL ?? "https://login.salesforce.com"
 
+export function isSalesforceId(value: string): boolean {
+  return /^[a-zA-Z0-9]{15}(?:[a-zA-Z0-9]{3})?$/.test(value)
+}
+
 export function getSalesforceOAuthConfig() {
   const clientId = process.env.SF_OAUTH_CLIENT_ID
   const clientSecret = process.env.SF_OAUTH_CLIENT_SECRET

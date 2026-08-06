@@ -134,6 +134,36 @@ export interface DocumentRecord {
   createdAt: string
 }
 
+export interface SalesforceLeadNote {
+  id: string
+  title: string
+  body: string
+  authorName: string | null
+  type: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export type SalesforceLeadFileSource = "content" | "attachment"
+
+export interface SalesforceLeadFile {
+  id: string
+  contentDocumentId: string | null
+  versionId: string | null
+  name: string
+  extension: string | null
+  fileType: string | null
+  contentType: string | null
+  description: string | null
+  pathOnClient: string | null
+  versionNumber: string | null
+  fileSize: number | null
+  createdAt: string
+  updatedAt: string
+  source: SalesforceLeadFileSource
+  previewUrl: string
+}
+
 // Composite — used by the File detail page
 export interface MortgageFileDetail extends MortgageFile {
   tasks: Task[]

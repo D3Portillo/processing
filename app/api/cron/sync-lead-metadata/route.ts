@@ -36,6 +36,12 @@ export async function GET() {
 
     await upsertLeadMetadataBatch(updates)
 
+    console.debug({
+      totalLeads: leads.length,
+      updatedLeads: updates.length,
+      historyRecords: history.length,
+    })
+
     return NextResponse.json({
       totalLeads: leads.length,
       historyRecords: history.length,

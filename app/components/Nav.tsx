@@ -1,23 +1,35 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import Link from "next/link";
-import { AppBar, Toolbar, Typography, Container, Box, IconButton } from "@mui/material";
-import { Search } from "lucide-react";
-import { SearchDialog } from "./SearchDialog";
-import { useSalesforceUser } from "@/app/hooks/useSalesforceUser";
-import { ProfileMenu } from "./ProfileMenu";
+import { useState } from "react"
+import Link from "next/link"
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Container,
+  Box,
+  IconButton,
+} from "@mui/material"
+import { Search } from "lucide-react"
+import { SearchDialog } from "./SearchDialog"
+import { useSalesforceUser } from "@/app/hooks/useSalesforceUser"
+import { ProfileMenu } from "./ProfileMenu"
+import Logo from "./Logo"
 
-export function Nav({ active }: { active: "tasks" | "sales" | "files" | "people" }) {
-  const [searchOpen, setSearchOpen] = useState(false);
-  const { data } = useSalesforceUser();
+export function Nav({
+  active,
+}: {
+  active: "tasks" | "sales" | "files" | "people"
+}) {
+  const [searchOpen, setSearchOpen] = useState(false)
+  const { data } = useSalesforceUser()
 
   const links = [
     { href: "/", label: "Tasks", key: "tasks" as const },
     { href: "/files", label: "Files", key: "files" as const },
     { href: "/people", label: "People", key: "people" as const },
     { href: "/sales", label: "Sales", key: "sales" as const },
-  ];
+  ]
 
   return (
     <>
@@ -34,11 +46,11 @@ export function Nav({ active }: { active: "tasks" | "sales" | "files" | "people"
         <Container maxWidth="lg">
           <Toolbar disableGutters sx={{ gap: 2 }}>
             <Link href="/" style={{ textDecoration: "none" }}>
-              <Typography variant="h6" component="div" sx={{ fontWeight: 500, flexGrow: 0, color: "text.primary", cursor: "pointer" }}>
-                Processing
-              </Typography>
+              <Logo className="w-15" />
             </Link>
-            <Box sx={{ display: "flex", gap: 2, ml: "auto", alignItems: "center" }}>
+            <Box
+              sx={{ display: "flex", gap: 2, ml: "auto", alignItems: "center" }}
+            >
               {links.map((link) => (
                 <Link
                   key={link.key}
@@ -51,7 +63,8 @@ export function Nav({ active }: { active: "tasks" | "sales" | "files" | "people"
                       pb: 0.5,
                       borderBottom: active === link.key ? 2 : 0,
                       borderColor: "primary.main",
-                      color: active === link.key ? "primary.main" : "text.secondary",
+                      color:
+                        active === link.key ? "primary.main" : "text.secondary",
                       fontWeight: active === link.key ? 600 : 400,
                       "&:hover": { color: "primary.main" },
                     }}
@@ -60,13 +73,20 @@ export function Nav({ active }: { active: "tasks" | "sales" | "files" | "people"
                   </Typography>
                 </Link>
               ))}
-              <IconButton size="small" onClick={() => setSearchOpen(true)} sx={{ color: "text.secondary", ml: 1 }}>
+              <IconButton
+                size="small"
+                onClick={() => setSearchOpen(true)}
+                sx={{ color: "text.secondary", ml: 1 }}
+              >
                 <Search size={18} />
               </IconButton>
               {data?.user ? (
                 <ProfileMenu user={data.user} />
               ) : (
-                  <Link href="/api/auth/google/login" style={{ textDecoration: "none" }}>
+                <Link
+                  href="/api/auth/google/login"
+                  style={{ textDecoration: "none" }}
+                >
                   <Typography variant="caption" color="primary.main" noWrap>
                     Sign in with Google
                   </Typography>
@@ -78,5 +98,5 @@ export function Nav({ active }: { active: "tasks" | "sales" | "files" | "people"
       </AppBar>
       <SearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
-  );
+  )
 }
