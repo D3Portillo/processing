@@ -17,6 +17,7 @@ import {
   Button,
   Collapse,
   IconButton,
+  TextField,
 } from "@mui/material"
 import {
   FileText,
@@ -120,6 +121,8 @@ export function LiveFileDetail() {
     timeline: allHistory.length,
     notes: allNotes.length,
     documents: allFiles.length,
+    emails: 0,
+    sms: 0,
   }
 
   return (
@@ -337,15 +340,17 @@ export function LiveFileDetail() {
           </Card>
         </Box>
 
-        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
-          <AddTaskDialog
-            fileId={file.id}
-            specialists={specialists}
-            actorId={actorId}
-            assignedSpecialist={file.specialist}
-          />
-        </Box>
-        <FileTabs counts={taskCounts}>
+        <FileTabs
+          counts={taskCounts}
+          action={
+            <AddTaskDialog
+              fileId={file.id}
+              specialists={specialists}
+              actorId={actorId}
+              assignedSpecialist={file.specialist}
+            />
+          }
+        >
           <Card variant="outlined">
             <CardContent>
               {generatedTasks.map((task) => (
@@ -390,32 +395,24 @@ export function LiveFileDetail() {
           </Card>
           <Card variant="outlined">
             <CardContent>
-              {historyLoading ? (
-                <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-                  <CircularProgress size={24} />
+              <Stack spacing={1.5} sx={{ mb: 2 }}>
+                <TextField
+                  label="Add a note"
+                  multiline
+                  rows={4}
+                  fullWidth
+                  placeholder="Leave a note for this file..."
+                />
+                <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    sx={{ fontWeight: 600 }}
+                  >
+                    Add Note
+                  </Button>
                 </Box>
-              ) : allHistory.length > 0 ? (
-                <Box sx={{ display: "flex", flexDirection: "column" }}>
-                  {allHistory.map((entry, index) => (
-                    <HistoryItem
-                      key={entry.Id}
-                      entry={entry}
-                      isLast={index === allHistory.length - 1}
-                    />
-                  ))}
-                </Box>
-              ) : (
-                <Typography
-                  color="text.secondary"
-                  sx={{ textAlign: "center", py: 4 }}
-                >
-                  No timeline events yet.
-                </Typography>
-              )}
-            </CardContent>
-          </Card>
-          <Card variant="outlined">
-            <CardContent>
+              </Stack>
               {notesLoading ? (
                 <TabLoading />
               ) : allNotes.length > 0 ? (
@@ -555,9 +552,86 @@ export function LiveFileDetail() {
               )}
             </CardContent>
           </Card>
+          <Card variant="outlined">
+            <CardContent>
+              <Stack spacing={1.5}>
+                <TextField
+                  label="Message"
+                  multiline
+                  rows={4}
+                  fullWidth
+                  placeholder="Type your email message..."
+                />
+                <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    sx={{ fontWeight: 600 }}
+                  >
+                    Send Email
+                  </Button>
+                </Box>
+              </Stack>
+            </CardContent>
+          </Card>
+          <Card variant="outlined">
+            <CardContent>
+              <Stack spacing={1.5}>
+                <TextField
+                  label="Message"
+                  multiline
+                  rows={4}
+                  fullWidth
+                  placeholder="Type your SMS message..."
+                />
+                <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    sx={{ fontWeight: 600 }}
+                  >
+                    Send SMS
+                  </Button>
+                </Box>
+              </Stack>
+            </CardContent>
+          </Card>
+          <Card variant="outlined">
+            <CardContent>
+              {historyLoading ? (
+                <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+                  <CircularProgress size={24} />
+                </Box>
+              ) : allHistory.length > 0 ? (
+                <Box sx={{ display: "flex", flexDirection: "column" }}>
+                  {allHistory.map((entry, index) => (
+                    <HistoryItem
+                      key={entry.Id}
+                      entry={entry}
+                      isLast={index === allHistory.length - 1}
+                    />
+                  ))}
+                </Box>
+              ) : (
+                <Typography
+                  color="text.secondary"
+                  sx={{ textAlign: "center", py: 4 }}
+                >
+                  No timeline events yet.
+                </Typography>
+              )}
+            </CardContent>
+          </Card>
         </FileTabs>
 
-        <Box sx={{ display: "flex", gap: 2, pt: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 2,
+            pt: 2,
+          }}
+        >
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
             <Clock size={12} />
             <Typography variant="caption" color="text.secondary">

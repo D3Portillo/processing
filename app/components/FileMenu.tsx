@@ -1,20 +1,41 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Button, Menu, MenuItem, ListItemIcon, ListItemText, Divider } from "@mui/material";
-import { ChevronDown, ArrowRight, Mail, MessageSquare, RefreshCw } from "lucide-react";
-import { updateFileStage, useStore } from "@/app/lib/ui-actions";
-import type { Stage } from "@/app/lib/types";
-import { STAGES } from "@/app/lib/types";
+import { useState } from "react"
+import {
+  Button,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+  Divider,
+} from "@mui/material"
+import {
+  ChevronDown,
+  ArrowRight,
+  Mail,
+  MessageSquare,
+  RefreshCw,
+} from "lucide-react"
+import { updateFileStage, useStore } from "@/app/lib/ui-actions"
+import type { Stage } from "@/app/lib/types"
+import { STAGES } from "@/app/lib/types"
 
-export function FileMenu({ fileId, currentStage, actorId }: { fileId: string; currentStage: Stage; actorId: string }) {
-  useStore();
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const open = Boolean(anchorEl);
-  const [statusSubmenu, setStatusSubmenu] = useState<HTMLElement | null>(null);
+export function FileMenu({
+  fileId,
+  currentStage,
+  actorId,
+}: {
+  fileId: string
+  currentStage: Stage
+  actorId: string
+}) {
+  useStore()
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
+  const open = Boolean(anchorEl)
+  const [statusSubmenu, setStatusSubmenu] = useState<HTMLElement | null>(null)
 
-  const currentIndex = STAGES.indexOf(currentStage);
-  const nextStages = STAGES.filter((_, i) => i > currentIndex);
+  const currentIndex = STAGES.indexOf(currentStage)
+  const nextStages = STAGES.filter((_, i) => i > currentIndex)
 
   return (
     <>
@@ -24,18 +45,24 @@ export function FileMenu({ fileId, currentStage, actorId }: { fileId: string; cu
         onClick={(e) => setAnchorEl(e.currentTarget)}
         sx={{
           textTransform: "none",
-          fontWeight: 500,
+          fontWeight: 600,
           color: "text.primary",
           border: 1,
           borderColor: "divider",
-          borderRadius: 1,
           px: 1.5,
           "&:hover": { bgcolor: "action.hover" },
         }}
       >
         Actions
       </Button>
-      <Menu anchorEl={anchorEl} open={open} onClose={() => { setAnchorEl(null); setStatusSubmenu(null); }}>
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={() => {
+          setAnchorEl(null)
+          setStatusSubmenu(null)
+        }}
+      >
         <MenuItem onClick={(e) => setStatusSubmenu(e.currentTarget)}>
           <ListItemIcon sx={{ minWidth: 32, color: "text.secondary" }}>
             <RefreshCw size={16} />
@@ -59,9 +86,9 @@ export function FileMenu({ fileId, currentStage, actorId }: { fileId: string; cu
                 <MenuItem
                   key={stage}
                   onClick={() => {
-                    setStatusSubmenu(null);
-                    setAnchorEl(null);
-                    updateFileStage(fileId, stage, actorId);
+                    setStatusSubmenu(null)
+                    setAnchorEl(null)
+                    updateFileStage(fileId, stage, actorId)
                   }}
                 >
                   <ListItemIcon sx={{ minWidth: 32, color: "text.secondary" }}>
@@ -88,5 +115,5 @@ export function FileMenu({ fileId, currentStage, actorId }: { fileId: string; cu
         </MenuItem>
       </Menu>
     </>
-  );
+  )
 }

@@ -114,6 +114,7 @@ export function AddTaskDialog({
       <Button
         variant="outlined"
         size="small"
+        sx={{ height: 32 }}
         startIcon={<Plus size={16} />}
         onClick={(event) => setAnchorEl(event.currentTarget)}
       >
