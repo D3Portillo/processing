@@ -44,6 +44,9 @@ export function ProfileMenu({ user }: { user: GoogleIdentity }) {
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={() => setAnchorEl(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
+        slotProps={{ paper: { sx: { mt: 0.25 } } }}
       >
         <Box sx={{ px: 2, py: 1.25, minWidth: 220 }}>
           <Typography variant="body2" sx={{ fontWeight: 600 }} noWrap>
