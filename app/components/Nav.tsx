@@ -27,8 +27,12 @@ export function Nav({
   const links = [
     { href: "/", label: "Tasks", key: "tasks" as const },
     { href: "/files", label: "Files", key: "files" as const },
-    { href: "/people", label: "People", key: "people" as const },
-    { href: "/sales", label: "Sales", key: "sales" as const },
+    {
+      href: "/sales",
+      label: "Sales",
+      key: "sales" as const,
+      desktopOnly: true,
+    },
   ]
 
   return (
@@ -52,26 +56,33 @@ export function Nav({
               sx={{ display: "flex", gap: 2, ml: "auto", alignItems: "center" }}
             >
               {links.map((link) => (
-                <Link
+                <Box
                   key={link.key}
-                  href={link.href}
-                  style={{ textDecoration: "none" }}
+                  sx={{
+                    ...(link.desktopOnly && {
+                      display: { xs: "none", md: "block" },
+                    }),
+                  }}
                 >
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      pb: 0.5,
-                      borderBottom: active === link.key ? 2 : 0,
-                      borderColor: "primary.main",
-                      color:
-                        active === link.key ? "primary.main" : "text.secondary",
-                      fontWeight: active === link.key ? 600 : 400,
-                      "&:hover": { color: "primary.main" },
-                    }}
-                  >
-                    {link.label}
-                  </Typography>
-                </Link>
+                  <Link href={link.href} style={{ textDecoration: "none" }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        pb: 0.5,
+                        borderBottom: active === link.key ? 2 : 0,
+                        borderColor: "primary.main",
+                        color:
+                          active === link.key
+                            ? "primary.main"
+                            : "text.secondary",
+                        fontWeight: active === link.key ? 600 : 400,
+                        "&:hover": { color: "primary.main" },
+                      }}
+                    >
+                      {link.label}
+                    </Typography>
+                  </Link>
+                </Box>
               ))}
               <IconButton
                 size="small"

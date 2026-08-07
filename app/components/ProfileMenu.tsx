@@ -1,7 +1,15 @@
 "use client"
 
 import { useState } from "react"
-import { Avatar, Box, Menu, MenuItem, Typography } from "@mui/material"
+import {
+  Avatar,
+  Box,
+  Divider,
+  Menu,
+  MenuItem,
+  Typography,
+} from "@mui/material"
+import { Users, Calendar } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { colorFromString, getInitials } from "@/app/lib/utils"
 import type { GoogleIdentity } from "@/app/lib/google-auth"
@@ -45,6 +53,15 @@ export function ProfileMenu({ user }: { user: GoogleIdentity }) {
             {user.email}
           </Typography>
         </Box>
+        <MenuItem onClick={() => router.push("/people")}>
+          <Users size={16} style={{ marginRight: 8 }} />
+          People
+        </MenuItem>
+        <MenuItem onClick={() => router.push("/sales")}>
+          <Calendar size={16} style={{ marginRight: 8 }} />
+          Upcoming Sales
+        </MenuItem>
+        <Divider />
         <MenuItem onClick={disconnect}>Disconnect</MenuItem>
       </Menu>
     </>
