@@ -7,6 +7,7 @@ export const TASK_TYPES = [
   "follow_up_lender",
   "follow_up_borrower",
   "internal_red_flag",
+  "custom",
 ] as const
 
 export type TaskType = (typeof TASK_TYPES)[number]

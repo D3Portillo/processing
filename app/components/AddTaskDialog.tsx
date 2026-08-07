@@ -18,44 +18,80 @@ import {
   Stack,
 } from "@mui/material"
 import { Plus, Phone } from "lucide-react"
+import { toast } from "react-hot-toast"
+import { createTask } from "@/app/actions/tasks"
+import { useTasks } from "@/app/hooks/useTasks"
 import type { Specialist } from "@/app/lib/types"
 
 export function AddTaskDialog({
+  fileId,
   specialists,
+  actorId,
+  assignedSpecialist,
 }: {
   fileId: string
   specialists: Specialist[]
   actorId: string
+  assignedSpecialist?: Specialist | null
 }) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState("")
-  const [assignTo, setAssignTo] = useState(specialists[0]?.id ?? "")
+  const [assignTo, setAssignTo] = useState("")
   const [dueDate, setDueDate] = useState("")
   const [description, setDescription] = useState("")
+  const [saving, setSaving] = useState(false)
+  const { mutate } = useTasks(fileId)
 
   function openBlank() {
     setTitle("")
     setDescription("")
     setDueDate("")
+    // Custom tasks start unassigned so the creator must pick someone.
+    setAssignTo("")
     setOpen(true)
     setAnchorEl(null)
   }
 
   function openFollowUp() {
     setTitle("Follow up")
+    setDescription("")
+    setDueDate("")
+    // Follow-ups default to the person assigned to the file.
+    setAssignTo(assignedSpecialist?.id ?? "")
     setOpen(true)
     setAnchorEl(null)
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!title.trim()) return
 
-    // Task persistence is intentionally not connected yet.
-    setTitle("")
-    setDescription("")
-    setDueDate("")
-    setOpen(false)
+    setSaving(true)
+    try {
+      const result = await createTask({
+        fileId,
+        title,
+        type: "custom",
+        assignedToId: assignTo,
+        dueDate: dueDate || null,
+        note: description.trim() || null,
+      })
+
+      if (result.error) {
+        toast.error(result.error)
+        return
+      }
+
+      toast.success("Task created")
+      setTitle("")
+      setDescription("")
+      setDueDate("")
+      setAssignTo("")
+      setOpen(false)
+      await mutate()
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -119,7 +155,10 @@ export function AddTaskDialog({
               fullWidth
               value={dueDate}
               onChange={(event) => setDueDate(event.target.value)}
-              slotProps={{ inputLabel: { shrink: true } }}
+              slotProps={{
+                inputLabel: { shrink: true },
+                htmlInput: { min: new Date().toISOString().slice(0, 10) },
+              }}
             />
             <TextField
               label="Description (optional)"
@@ -136,7 +175,7 @@ export function AddTaskDialog({
           <Button
             variant="contained"
             onClick={handleSubmit}
-            disabled={!title.trim()}
+            disabled={!title.trim() || saving}
           >
             Create Task
           </Button>

@@ -262,6 +262,7 @@ export function LiveFileDetail() {
             fileId={file.id}
             specialists={specialists}
             actorId={actorId}
+            assignedSpecialist={file.specialist}
           />
         </Box>
         <FileTabs counts={taskCounts}>
