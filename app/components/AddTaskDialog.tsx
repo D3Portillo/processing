@@ -16,6 +16,9 @@ import {
   ListItemIcon,
   ListItemText,
   Stack,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
 } from "@mui/material"
 import { Plus, Phone } from "lucide-react"
 import { toast } from "react-hot-toast"
@@ -36,6 +39,10 @@ export function AddTaskDialog({
 }) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [open, setOpen] = useState(false)
+  const [mode, setMode] = useState<"custom" | "followup">("custom")
+  const [followUpTarget, setFollowUpTarget] = useState<"borrower" | "lender">(
+    "lender",
+  )
   const [title, setTitle] = useState("")
   const [assignTo, setAssignTo] = useState("")
   const [dueDate, setDueDate] = useState("")
@@ -44,6 +51,7 @@ export function AddTaskDialog({
   const { mutate } = useTasks(fileId)
 
   function openBlank() {
+    setMode("custom")
     setTitle("")
     setDescription("")
     setDueDate("")
@@ -54,13 +62,22 @@ export function AddTaskDialog({
   }
 
   function openFollowUp() {
-    setTitle("Follow up")
+    setMode("followup")
+    setFollowUpTarget("lender")
+    setTitle("Lender Follow Up")
     setDescription("")
     setDueDate("")
     // Follow-ups default to the person assigned to the file.
     setAssignTo(assignedSpecialist?.id ?? "")
     setOpen(true)
     setAnchorEl(null)
+  }
+
+  function handleFollowUpTargetChange(target: "borrower" | "lender") {
+    setFollowUpTarget(target)
+    setTitle(
+      target === "borrower" ? "Borrower Follow Up" : "Lender Follow Up",
+    )
   }
 
   async function handleSubmit() {
@@ -124,9 +141,35 @@ export function AddTaskDialog({
         fullWidth
         maxWidth="sm"
       >
-        <DialogTitle>New Task</DialogTitle>
+        <DialogTitle>
+          {mode === "followup" ? "New Follow Up" : "New Task"}
+        </DialogTitle>
         <DialogContent>
           <Stack spacing={2.5} sx={{ mt: 1 }}>
+            {mode === "followup" && (
+              <FormControl>
+                <RadioGroup
+                  row
+                  value={followUpTarget}
+                  onChange={(event) =>
+                    handleFollowUpTargetChange(
+                      event.target.value as "borrower" | "lender",
+                    )
+                  }
+                >
+                  <FormControlLabel
+                    value="borrower"
+                    control={<Radio size="small" />}
+                    label="Borrower"
+                  />
+                  <FormControlLabel
+                    value="lender"
+                    control={<Radio size="small" />}
+                    label="Lender"
+                  />
+                </RadioGroup>
+              </FormControl>
+            )}
             <TextField
               label="Title"
               fullWidth
