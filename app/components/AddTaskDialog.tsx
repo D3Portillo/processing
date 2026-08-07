@@ -41,7 +41,7 @@ export function AddTaskDialog({
   const [open, setOpen] = useState(false)
   const [mode, setMode] = useState<"custom" | "followup">("custom")
   const [followUpTarget, setFollowUpTarget] = useState<"borrower" | "lender">(
-    "lender",
+    "borrower",
   )
   const [title, setTitle] = useState("")
   const [assignTo, setAssignTo] = useState("")
@@ -63,8 +63,8 @@ export function AddTaskDialog({
 
   function openFollowUp() {
     setMode("followup")
-    setFollowUpTarget("lender")
-    setTitle("Lender Follow Up")
+    setFollowUpTarget("borrower")
+    setTitle("Borrower Follow Up")
     setDescription("")
     setDueDate("")
     // Follow-ups default to the person assigned to the file.
@@ -75,9 +75,7 @@ export function AddTaskDialog({
 
   function handleFollowUpTargetChange(target: "borrower" | "lender") {
     setFollowUpTarget(target)
-    setTitle(
-      target === "borrower" ? "Borrower Follow Up" : "Lender Follow Up",
-    )
+    setTitle(target === "borrower" ? "Borrower Follow Up" : "Lender Follow Up")
   }
 
   async function handleSubmit() {
@@ -127,11 +125,15 @@ export function AddTaskDialog({
         onClose={() => setAnchorEl(null)}
       >
         <MenuItem onClick={openFollowUp}>
-          <ListItemIcon><Phone size={16} /></ListItemIcon>
+          <ListItemIcon>
+            <Phone size={16} />
+          </ListItemIcon>
           <ListItemText>Follow up</ListItemText>
         </MenuItem>
         <MenuItem onClick={openBlank}>
-          <ListItemIcon><Plus size={16} /></ListItemIcon>
+          <ListItemIcon>
+            <Plus size={16} />
+          </ListItemIcon>
           <ListItemText>Create Task</ListItemText>
         </MenuItem>
       </Menu>
@@ -196,6 +198,7 @@ export function AddTaskDialog({
               label="Due Date"
               type="date"
               fullWidth
+              required
               value={dueDate}
               onChange={(event) => setDueDate(event.target.value)}
               slotProps={{
@@ -218,7 +221,7 @@ export function AddTaskDialog({
           <Button
             variant="contained"
             onClick={handleSubmit}
-            disabled={!title.trim() || saving}
+            disabled={!title.trim() || !dueDate || saving}
           >
             Create Task
           </Button>

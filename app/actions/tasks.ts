@@ -25,7 +25,10 @@ export async function createTask(input: CreateTaskInput) {
   if (!assignedToId) {
     return { error: "Please select who to assign this task to" }
   }
-  if (dueDate && dueDate < todayInTz()) {
+  if (!dueDate) {
+    return { error: "Due date is required" }
+  }
+  if (dueDate < todayInTz()) {
     return { error: "Due date cannot be in the past" }
   }
 

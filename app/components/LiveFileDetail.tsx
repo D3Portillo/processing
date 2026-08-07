@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import {
@@ -14,6 +15,8 @@ import {
   Stack,
   Chip,
   Button,
+  Collapse,
+  IconButton,
 } from "@mui/material"
 import {
   FileText,
@@ -23,6 +26,7 @@ import {
   MapPin,
   Clock,
   User,
+  ChevronDown,
 } from "lucide-react"
 import { useLeads } from "@/app/hooks/useLeads"
 import { useSalesforceUser } from "@/app/hooks/useSalesforceUser"
@@ -31,6 +35,7 @@ import { useLeadMetadata } from "@/app/hooks/useLeadMetadata"
 import { useLeadHistory } from "@/app/hooks/useLeadHistory"
 import { useLeadNotes } from "@/app/hooks/useLeadNotes"
 import { useLeadFiles } from "@/app/hooks/useLeadFiles"
+import { useLeadBorrowerInfo } from "@/app/hooks/useLeadBorrowerInfo"
 import type { SalesforceLeadHistory } from "@/app/lib/lead-metadata"
 import { mapLeadToMortgageFile } from "@/app/lib/lead-mapper"
 import { Nav } from "@/app/components/Nav"
@@ -47,6 +52,7 @@ import type { Task } from "@/app/lib/types"
 
 export function LiveFileDetail() {
   const params = useParams<{ fileId: string }>()
+  const [moreOpen, setMoreOpen] = useState(false)
   const { data: leads, error, isLoading } = useLeads()
   const { data: connectedUser } = useSalesforceUser()
   const { data: taskRows, isLoading: tasksLoading } = useTasks(params.fileId)
@@ -56,6 +62,7 @@ export function LiveFileDetail() {
   )
   const { data: notes, isLoading: notesLoading } = useLeadNotes(params.fileId)
   const { data: files, isLoading: filesLoading } = useLeadFiles(params.fileId)
+  const { data: borrowerInfo } = useLeadBorrowerInfo(params.fileId)
 
   if (isLoading || tasksLoading) {
     return (
@@ -202,52 +209,125 @@ export function LiveFileDetail() {
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <MapPin size={14} />
                   <Typography variant="body2" color="text.secondary">
-                    Property address unavailable
+                    {borrowerInfo?.address || "Property address unavailable"}
                   </Typography>
                 </Box>
               </Stack>
-              <Divider sx={{ my: 1.5 }} />
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: 2,
-                }}
-              >
-                <Link
-                  href={`https://force-energy-1679.lightning.force.com/lightning/r/Lead/${file.id}/view`}
-                  target="_blank"
-                  style={{ textDecoration: "none" }}
+
+              <div className="bg-neutral-100/70 rounded-lg p-3 mt-3">
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => setMoreOpen((open) => !open)}
                 >
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      color: "primary.main",
-                      "&:hover": { textDecoration: "underline" },
-                    }}
-                  >
-                    {file.borrower.loanNumber
-                      ? `Loan #${file.borrower.loanNumber}`
-                      : "View in Salesforce"}
+                  <Typography className="font-semibold" variant="body2">
+                    Extra Details
                   </Typography>
-                </Link>
-                {file.borrower.loanType && (
-                  <Chip
-                    label={file.borrower.loanType}
-                    size="small"
-                    variant="outlined"
-                    sx={{
-                      borderColor: "primary.main",
-                      color: "primary.main",
-                      fontWeight: 500,
-                    }}
-                  />
-                )}
-              </Box>
+                  <IconButton size="small">
+                    <ChevronDown
+                      size={16}
+                      style={{
+                        transform: moreOpen ? "rotate(180deg)" : "none",
+                        transition: "transform 0.2s",
+                      }}
+                    />
+                  </IconButton>
+                </Box>
+                <Collapse in={moreOpen}>
+                  <Stack spacing={1} sx={{ mt: 1.5 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <User size={14} />
+                      <Typography variant="body2" color="text.secondary">
+                        Co-borrower: {borrowerInfo?.cob_name || "N/A"}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Phone size={14} />
+                      <Typography variant="body2" color="text.secondary">
+                        Co-borrower phone: {borrowerInfo?.cob_phone || "N/A"}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Mail size={14} />
+                      <Typography variant="body2" color="text.secondary">
+                        Co-borrower email: {borrowerInfo?.cob_email || "N/A"}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <FileText size={14} />
+                      <Typography variant="body2" color="text.secondary">
+                        SSN: {borrowerInfo?.ssn || "N/A"}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Clock size={14} />
+                      <Typography variant="body2" color="text.secondary">
+                        Date of birth: {borrowerInfo?.birth_date || "N/A"}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <FileText size={14} />
+                      <Typography variant="body2" color="text.secondary">
+                        Has source of income:{" "}
+                        {borrowerInfo?.has_income == null
+                          ? "N/A"
+                          : borrowerInfo.has_income
+                            ? "Yes"
+                            : "No"}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Collapse>
+              </div>
+
+              <div className="h-16 flex flex-col">
+                <Divider sx={{ my: 1.5 }} />
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 2,
+                  }}
+                >
+                  <Link
+                    href={`https://force-energy-1679.lightning.force.com/lightning/r/Lead/${file.id}/view`}
+                    target="_blank"
+                    style={{ textDecoration: "none" }}
+                  >
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "primary.main",
+                        "&:hover": { textDecoration: "underline" },
+                      }}
+                    >
+                      {file.borrower.loanNumber
+                        ? `Loan #${file.borrower.loanNumber}`
+                        : "View in Salesforce"}
+                    </Typography>
+                  </Link>
+                  {file.borrower.loanType && (
+                    <Chip
+                      label={file.borrower.loanType}
+                      size="small"
+                      variant="outlined"
+                      sx={{
+                        borderColor: "primary.main",
+                        color: "primary.main",
+                        fontWeight: 500,
+                      }}
+                    />
+                  )}
+                </Box>
+              </div>
             </CardContent>
           </Card>
           <Card variant="outlined">
-            <CardContent>
+            <CardContent className="flex flex-col h-full">
               <LenderCard
                 lender={file.lender}
                 contacts={[]}
