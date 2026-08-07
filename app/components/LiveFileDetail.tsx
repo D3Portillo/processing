@@ -15,7 +15,15 @@ import {
   Chip,
   Button,
 } from "@mui/material"
-import { FileText, ExternalLink, Phone, Mail, MapPin, Clock, User } from "lucide-react"
+import {
+  FileText,
+  ExternalLink,
+  Phone,
+  Mail,
+  MapPin,
+  Clock,
+  User,
+} from "lucide-react"
 import { useLeads } from "@/app/hooks/useLeads"
 import { useSalesforceUser } from "@/app/hooks/useSalesforceUser"
 import { useTasks } from "@/app/hooks/useTasks"
@@ -340,11 +348,21 @@ export function LiveFileDetail() {
                         borderColor: "divider",
                       }}
                     >
-                      <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          gap: 2,
+                        }}
+                      >
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
                           {note.authorName ?? "Unknown poster"}
                         </Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ flexShrink: 0 }}
+                        >
                           {formatDate(note.updatedAt || note.createdAt)}
                         </Typography>
                       </Box>
@@ -363,7 +381,11 @@ export function LiveFileDetail() {
                           dangerouslySetInnerHTML={{ __html: note.body }}
                         />
                       ) : (
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ mt: 0.75 }}
+                        >
                           No note content.
                         </Typography>
                       )}
@@ -371,7 +393,10 @@ export function LiveFileDetail() {
                   ))}
                 </Box>
               ) : (
-                <Typography color="text.secondary" sx={{ textAlign: "center", py: 4 }}>
+                <Typography
+                  color="text.secondary"
+                  sx={{ textAlign: "center", py: 4 }}
+                >
                   No notes yet.
                 </Typography>
               )}
@@ -397,17 +422,30 @@ export function LiveFileDetail() {
                     >
                       <FileText size={18} />
                       <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography variant="body2" noWrap sx={{ fontWeight: 500 }}>
+                        <Typography
+                          variant="body2"
+                          noWrap
+                          sx={{ fontWeight: 500 }}
+                        >
                           {document.name}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           {document.extension
                             ? document.extension.toUpperCase()
-                            : document.fileType ?? document.contentType ?? "File"}
-                          {document.fileSize !== null ? ` · ${formatFileSize(document.fileSize)}` : ""}
+                            : (document.fileType ??
+                              document.contentType ??
+                              "File")}
+                          {document.fileSize !== null
+                            ? ` · ${formatFileSize(document.fileSize)}`
+                            : ""}
                         </Typography>
                         {document.description && (
-                          <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            noWrap
+                            sx={{ display: "block" }}
+                          >
                             {document.description}
                           </Typography>
                         )}
@@ -427,7 +465,10 @@ export function LiveFileDetail() {
                   ))}
                 </Box>
               ) : (
-                <Typography color="text.secondary" sx={{ textAlign: "center", py: 4 }}>
+                <Typography
+                  color="text.secondary"
+                  sx={{ textAlign: "center", py: 4 }}
+                >
                   No documents uploaded.
                 </Typography>
               )}
@@ -537,8 +578,10 @@ function capitalize(value: string): string {
   return value ? value.charAt(0).toUpperCase() + value.slice(1) : value
 }
 
-function formatHistoryValue(value: string): string {
-  if (!value.startsWith("005Pm")) return value
+function formatHistoryValue(value = ""): string {
+  if (value?.toString()?.startsWith("005Pm")) {
+    return ALL_USERS.find((user) => user.Id === value)?.Name ?? value
+  }
 
-  return ALL_USERS.find((user) => user.Id === value)?.Name ?? value
+  return value.toString()
 }
